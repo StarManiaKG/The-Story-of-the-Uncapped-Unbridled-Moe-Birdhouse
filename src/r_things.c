@@ -2527,6 +2527,18 @@ void R_DrawMasked(void)
 
 INT32 numskins = 0;
 skin_t skins[MAXSKINS];
+UINT8 skinstats[9][9][MAXSKINS];
+UINT8 skinstatscount[9][9] = {
+	{0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 1, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0}
+};
 // FIXTHIS: don't work because it must be inistilised before the config load
 //#define SKINVALUES
 #ifdef SKINVALUES
@@ -3014,6 +3026,10 @@ next_token:
 		if (rendermode == render_opengl)
 			HWR_AddPlayerMD2(numskins);
 #endif
+		skinstats[skin->kartspeed-1][skin->kartweight-1][skinstatscount[skin->kartspeed-1][skin->kartweight-1]] = numskins;
+		CONS_Debug(DBG_SETUP, M_GetText("Added %d to %d, %d\n"), numskins, skin->kartweight, skin->kartweight);
+		skinstatscount[skin->kartspeed-1][skin->kartweight-1]++;
+		CONS_Debug(DBG_SETUP, M_GetText("Incremented %d, %d to %d\n"), skin->kartspeed, skin->kartweight, skinstatscount[skin->kartspeed - 1][skin->kartweight - 1]);
 
 		numskins++;
 	}
