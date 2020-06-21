@@ -9687,6 +9687,11 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 			break;
 
 		case KEY_ESCAPE:
+			if (setupm_skinlockedselect)
+			{
+				setupm_skinlockedselect = false;
+				break;
+			}
 			exitmenu = true;
 			break;
 
