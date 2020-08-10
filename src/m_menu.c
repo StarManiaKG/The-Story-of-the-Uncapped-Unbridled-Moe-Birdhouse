@@ -9348,7 +9348,7 @@ static void M_DrawSetupMultiPlayerMenu(void)
 
 			for (i = 0; i < numskins; i++) // draw the stat dots
 			{
-				if (i != setupm_fakeskin && R_SkinAvailable(skins[i].name) != -1)
+				if (R_SkinAvailable(skins[i].name) != -1)
 				{
 					speed = skins[i].kartspeed;
 					weight = skins[i].kartweight;
@@ -9453,7 +9453,7 @@ static void M_DrawSetupMultiPlayerMenu(void)
 
 				if (setupm_skinselect < numskins)
 				{
-					UINT8 *cmap = R_GetTranslationColormap(setupm_skinselect, setupm_fakecolor, GTC_MENUCACHE);
+					UINT8 *cmap = R_GetTranslationColormap(skinsorted[setupm_skinselect], setupm_fakecolor, GTC_MENUCACHE);
 
 					cursor = facewantprefix[skinsorted[setupm_skinselect]];
 					V_DrawFixedPatch(((curx-8) << FRACBITS), ((cury-8) << FRACBITS), FRACUNIT, 0, cursor, cmap);
@@ -9653,20 +9653,32 @@ static void M_DrawSetupMultiPlayerMenu(void)
 			if (R_SkinAvailable(skins[skintodisplay].name) != -1)
 				sprdef = &skins[R_SkinAvailable(skins[skintodisplay].name)].spritedef;
 			else
+			{
 				sprdef = &skins[0].spritedef;
+				skintodisplay = 0;
+			}
 			break;
 		case SKINMENUTYPE_GRID:
 			skintodisplay = (itemOn == 1 && setupm_skinselect < numskins ? skinsorted[setupm_skinselect] : setupm_fakeskin);
 			if (R_SkinAvailable(skins[skintodisplay].name) != -1)
 				sprdef = &skins[R_SkinAvailable(skins[skintodisplay].name)].spritedef;
 			else
+			{
 				sprdef = &skins[0].spritedef;
+				skintodisplay = 0;
+			}
 			break;
 		default:
 			if (R_SkinAvailable(skins[setupm_fakeskin].name) != -1)
+			{
 				sprdef = &skins[R_SkinAvailable(skins[setupm_fakeskin].name)].spritedef;
+				skintodisplay = setupm_fakeskin;
+			}
 			else
+			{
 				sprdef = &skins[0].spritedef;
+				skintodisplay = 0;
+			}
 			break;
 	}
 
@@ -9688,14 +9700,14 @@ static void M_DrawSetupMultiPlayerMenu(void)
 	// draw player sprite
 	if (setupm_fakecolor) // inverse should never happen
 	{
-		UINT8 *colormap = R_GetTranslationColormap(setupm_fakeskin, setupm_fakecolor, GTC_MENUCACHE);
+		UINT8 *colormap = R_GetTranslationColormap(skintodisplay, setupm_fakecolor, GTC_MENUCACHE);
 
-		if (skins[setupm_fakeskin].flags & SF_HIRES)
+		if (skins[skintodisplay].flags & SF_HIRES)
 		{
 			V_DrawFixedPatch((mx+43)<<FRACBITS,
 						(my+131)<<FRACBITS,
-						skins[setupm_fakeskin].highresscale,
-						flags, patch, colormap);
+				skins[skintodisplay].highresscale,
+				flags, patch, colormap);
 		}
 		else
 			V_DrawMappedPatch(mx+43, my+131, flags, patch, colormap);
