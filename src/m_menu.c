@@ -1037,19 +1037,33 @@ static menuitem_t MP_ServerMenu[] =
 
 // Separated offline and normal servers.
 static menuitem_t MP_OfflineServerMenu[] =
-{
-	{IT_STRING|IT_CVAR,      NULL, "Game Type",             &cv_newgametype,       68},
-	{IT_STRING|IT_CVAR,      NULL, "Level",                 &cv_nextmap,           78},
+	{
+		{IT_STRING | IT_CVAR, NULL, "Game Type", &cv_newgametype, 68},
+		{IT_STRING | IT_CVAR, NULL, "Level", &cv_nextmap, 90},
 
-	{IT_WHITESTRING|IT_CALL, NULL, "Start",                 M_StartServer,        130},
+		{IT_WHITESTRING | IT_CALL, NULL, "Start", M_StartServer, 130},
 };
 
 static menuitem_t MP_PlayerSetupMenu[] =
-{
-	{IT_KEYHANDLER | IT_STRING,   NULL, "Name",      M_HandleSetupMultiPlayer,   0},
-	{IT_KEYHANDLER | IT_STRING,   NULL, "Character", M_HandleSetupMultiPlayer,  16}, // Tails 01-18-2001
-	{IT_KEYHANDLER | IT_STRING,   NULL, "Color",     M_HandleSetupMultiPlayer, 152},
+	{
+		{IT_KEYHANDLER | IT_STRING, NULL, "Name", M_HandleSetupMultiPlayer, 6},
+		{IT_KEYHANDLER | IT_STRING, NULL, "Character", M_HandleSetupMultiPlayer, 31},
+		{IT_KEYHANDLER | IT_STRING, NULL, "Color", M_HandleSetupMultiPlayer, 157},
 };
+
+#define MP_PLAYERSETUP_GRID_X 119
+
+// This is kinda dumb.
+static INT32 MP_PlayerSetupMenu_XOffsets[3] = {60, MP_PLAYERSETUP_GRID_X, MP_PLAYERSETUP_GRID_X};
+
+typedef enum
+{
+	MPPLAYERSETUPITEM_NAME,
+	MPPLAYERSETUPITEM_CHARACTER,
+	MPPLAYERSETUPITEM_COLOR,
+
+	MPPLAYERSETUPITEM_MAX
+} mpplayersetupitem_t;
 
 #ifndef NONET
 static menuitem_t MP_ConnectMenu[] =
@@ -1987,16 +2001,15 @@ menu_t MP_ConnectDef =
 };
 #endif
 menu_t MP_PlayerSetupDef =
-{
-	NULL, //"M_SPLAYR"
-	sizeof (MP_PlayerSetupMenu)/sizeof (menuitem_t),
-	&MP_MainDef,
-	MP_PlayerSetupMenu,
-	M_DrawSetupMultiPlayerMenu,
-	36, 14,
-	0,
-	M_QuitMultiPlayerMenu
-};
+	{
+		NULL, //"M_SPLAYR"
+		sizeof(MP_PlayerSetupMenu) / sizeof(menuitem_t),
+		&MP_MainDef,
+		MP_PlayerSetupMenu,
+		M_DrawSetupMultiPlayerMenu,
+		36, 6,
+		0,
+		M_QuitMultiPlayerMenu};
 
 // Options
 menu_t OP_MainDef =
@@ -9504,12 +9517,12 @@ static boolean setupm_skinlockedselect;
 static void MPSetup_DrawNameEntry(INT32 mx, INT32 my)
 {
 	// draw name string
-	M_DrawTextBox(mx + 32, my - 8, MAXPLAYERNAME, 1);
-	V_DrawString(mx + 40, my, V_ALLOWLOWERCASE, setupm_name);
+	M_DrawTextBox(mx + 0, my - 8, MAXPLAYERNAME, 1);
+	V_DrawString(mx + 4, my, V_ALLOWLOWERCASE, setupm_name);
 
 	// draw text cursor for name
-	if (!itemOn && skullAnimCounter < 4) // blink cursor
-		V_DrawCharacter(mx + 40 + V_StringWidth(setupm_name, V_ALLOWLOWERCASE), my, '_', false);
+	if (itemOn == 0 && skullAnimCounter < 4) // blink cursor
+		V_DrawCharacter(mx + 4 + V_StringWidth(setupm_name, V_ALLOWLOWERCASE), my, '_', false);
 }
 
 /**
@@ -9518,28 +9531,20 @@ static void MPSetup_DrawNameEntry(INT32 mx, INT32 my)
 static void MPSetup_DrawSkinNameString(INT32 mx, INT32 my)
 {
 	// draw skin string
-	INT32 st = V_StringWidth(skins[setupm_fakeskin].realname, 0);
-	INT32 tw = 0;
-
 	INT32 skintodisplay = setupm_fakeskin;
 	if (setupm_skinlockedselect) // show the skin we are trying to select
 		skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][setupm_skinselect];
 	else if (skinstatscount[setupm_skinxpos][setupm_skinypos] && itemOn == 1)
-		skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][(I_GetTime() / TICRATE) % SELECTEDSTATSCOUNT];
+		skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][0];
 
-	tw = V_StringWidth("Character", 0);
-	st = V_StringWidth(skins[skintodisplay].realname, 0);
-	V_DrawString((mx + (tw / 2)) - (st / 2), my + 37,
-				 ((MP_PlayerSetupMenu[2].status & IT_TYPE) == IT_SPACE ? V_TRANSLUCENT : 0) | highlightflags | V_ALLOWLOWERCASE,
-				 skins[skintodisplay].realname);
-	// the menu is now 2d, no need for scroll arrows...
-	if (itemOn == 1 && setupm_skinlockedselect)
-	{
-		V_DrawCharacter(mx + 43 - (72 / 2) - 8 - (skullAnimCounter / 5), my + 65 + (84 / 2),
-						'\x1C' | highlightflags, false); // left arrow
-		V_DrawCharacter(mx + 43 - (72 / 2) + 72 + (skullAnimCounter / 5), my + 65 + (84 / 2),
-						'\x1D' | highlightflags, false); // right arrow
-	}
+	if (V_StringWidth(skins[skintodisplay].realname, V_ALLOWLOWERCASE) > 72)
+		V_DrawRightAlignedThinString(mx, my + 10,
+									 ((MP_PlayerSetupMenu[2].status & IT_TYPE) == IT_SPACE ? V_TRANSLUCENT : 0) | highlightflags | V_ALLOWLOWERCASE,
+									 skins[skintodisplay].realname);
+	else
+		V_DrawRightAlignedString(mx, my + 10,
+								 ((MP_PlayerSetupMenu[2].status & IT_TYPE) == IT_SPACE ? V_TRANSLUCENT : 0) | highlightflags | V_ALLOWLOWERCASE,
+								 skins[skintodisplay].realname);
 }
 
 /**
@@ -9549,95 +9554,69 @@ static void MPSetup_DrawColorNameString(INT32 mx, INT32 my)
 {
 	// draw the name of the color you have chosen
 	// Just so people don't go thinking that "Default" is Green.
-	INT32 st = V_StringWidth(KartColor_Names[setupm_fakecolor], 0);
-	V_DrawString(mx, my + 152, highlightflags | V_ALLOWLOWERCASE, KartColor_Names[setupm_fakecolor]); // SRB2kart
-	if (itemOn == 2)
-	{
-		V_DrawCharacter(mx - 10 /* - st*/ - (skullAnimCounter / 5), my + 152,
-						'\x1C' | highlightflags, false); // left arrow
-		V_DrawCharacter(mx + 2 + st + (skullAnimCounter / 5), my + 152,
-						'\x1D' | highlightflags, false); // right arrow
-	}
+	V_DrawRightAlignedString(mx, my + 10, highlightflags | V_ALLOWLOWERCASE, KartColor_Names[setupm_fakecolor]); // SRB2kart
 }
 
 #define GRIDSTATOFFSET 0
 #define SKINXSHIFT 55
 
-static void MPSetup_DrawCharacterGrid(INT32 mx, INT32 my, INT32 statx, INT32 staty)
+static void MPSetup_DrawCharacterGrid(INT32 mx, INT32 my)
 {
-	statx = ((BASEVIDWIDTH / 2) - (18 * 4)) - 8 + SKINXSHIFT;
-	staty = ((BASEVIDHEIGHT / 2) - (18 * 4)) - 8;
-	INT32 sltw = V_ThinStringWidth("Accel", V_6WIDTHSPACE);
-	INT32 actw = V_ThinStringWidth("Turn", V_6WIDTHSPACE);
-	INT32 hetw = V_ThinStringWidth("Heavy", V_6WIDTHSPACE);
+#define GRID_X_SHIFT 15
+#define GRID_Y_SHIFT 1
+	// Text colormap
+	const UINT8 *flashcol = V_GetStringColormap(highlightflags);
 
-#define DRAWSLOW(x, y) V_DrawThinString((x), (y), V_6WIDTHSPACE | highlightflags, "Accel")
-#define DRAWFAST(x, y) V_DrawThinString((x), (y), V_6WIDTHSPACE | highlightflags, "Speed")
-#define DRAWACCEL(x, y) V_DrawThinString((x), (y), V_6WIDTHSPACE | highlightflags, "Turn")
-#define DRAWHEAVY(x, y) V_DrawThinString((x), (y), V_6WIDTHSPACE | highlightflags, "Heavy")
-#define TEXTVERTSHIFT 10
+	// Draw the background
+	V_DrawScaledPatch(mx + GRID_X_SHIFT - 16, my + GRID_Y_SHIFT - 16, 0, W_CachePatchName("K_STATBG", PU_CACHE));
+	V_DrawMappedPatch(mx + GRID_X_SHIFT - 16, my + GRID_Y_SHIFT - 16, 0, W_CachePatchName("K_STATTX", PU_CACHE), flashcol);
 
-	DRAWSLOW(statx - sltw - 2, staty);
-	DRAWSLOW(statx - sltw - 2, staty - TEXTVERTSHIFT + (9 * 18) - 11);
-	DRAWFAST(statx + (9 * 18), staty);
-	DRAWFAST(statx + (9 * 18), staty - TEXTVERTSHIFT + (9 * 18) - 11);
-	DRAWACCEL(statx - actw - 2, staty + TEXTVERTSHIFT);
-	DRAWACCEL(statx + (9 * 18), staty + TEXTVERTSHIFT);
-	DRAWHEAVY(statx - hetw - 2, staty + (9 * 18) - 11);
-	DRAWHEAVY(statx + (9 * 18), staty + (9 * 18) - 11);
-
-#undef DRAWSLOW
-#undef DRAWFAST
-#undef DRAWACCEL
-#undef DRAWHEAVY
-#undef TEXTVERTSHIFT
-
-	// Stat dots
-	// better select screen
-	for (INT32 s = 0; s < MAXSTAT; s++)
+	// Draw the faces
+	for (INT32 speed = 0; speed < MAXSTAT; speed++)
 	{
-		for (INT32 w = 0; w < MAXSTAT; w++)
+		for (INT32 weight = 0; weight < MAXSTAT; weight++)
 		{
-			INT32 x = ((s * 18) + ((BASEVIDWIDTH / 2) - (18 * 4)) - 8 + SKINXSHIFT); // BASEVIDWIDTH / 2 - ((icons + 1) * 24) - 4;
-			INT32 y = ((w * 18) + ((BASEVIDHEIGHT / 2) - (18 * 4)) - 8);			 // BASEVIDWIDTH / 2 - ((icons + 1) * 24) - 4;
-			INT32 skinn;
+			INT32 x = ((speed * 17) + mx + GRID_X_SHIFT + (speed / 3) * 2);
+			INT32 y = ((weight * 17) + my + GRID_Y_SHIFT + (weight / 3) * 2);
+			INT32 skin_index;
 			patch_t *face;
 			UINT8 *cmap;
 
-			if (!skinstatscount[s][w])
-			{
-				V_DrawFill(x, y, 16, 16, 239);
+			if (skinstatscount[speed][weight] == 0)
 				continue;
-			}
 
-			skinn = skinstats[s][w][(I_GetTime() / TICRATE) % skinstatscount[s][w]];
-			face = facerankprefix[skinn];
-			cmap = R_GetTranslationColormap(skinn, skins[skinn].prefcolor, GTC_MENUCACHE);
+			skin_index = skinstats[speed][weight][0];
+			face = facerankprefix[skin_index];
+			cmap = R_GetTranslationColormap(skin_index, skins[skin_index].prefcolor, GTC_MENUCACHE);
 
-			V_DrawFixedPatch(x << FRACBITS, y << FRACBITS, FRACUNIT, 0, face, cmap);
+			V_DrawMappedPatch(x, y, 0, face, cmap);
 		}
 	}
 
 	if (itemOn == 1) // has to be on skin select part
 	{
 		patch_t *cursor;
-		INT32 curx = ((setupm_skinxpos * 18) + ((BASEVIDWIDTH / 2) - (18 * 4)) - 8 + SKINXSHIFT);
-		INT32 cury = ((setupm_skinypos * 18) + ((BASEVIDHEIGHT / 2) - (18 * 4)) - 8);
+		INT32 curx = ((setupm_skinxpos * 17) + mx + GRID_X_SHIFT + (setupm_skinxpos / 3) * 2);
+		INT32 cury = ((setupm_skinypos * 17) + my + GRID_Y_SHIFT + (setupm_skinypos / 3) * 2);
 
-		if (skinstatscount[setupm_skinxpos][setupm_skinypos])
+		if (skinstatscount[setupm_skinxpos][setupm_skinypos] > 0)
 		{
 			UINT8 *cmap = R_GetTranslationColormap(setupm_skinselect, setupm_fakecolor, GTC_MENUCACHE);
-			INT32 skinn = skinstats[setupm_skinxpos][setupm_skinypos][(I_GetTime() / TICRATE) % skinstatscount[setupm_skinxpos][setupm_skinypos]];
+			INT32 skinn = skinstats[setupm_skinxpos][setupm_skinypos][0];
 
 			cursor = facewantprefix[skinn];
-			V_DrawFixedPatch(((curx - 8) << FRACBITS), ((cury - 8) << FRACBITS), FRACUNIT, 0, cursor, cmap);
+			V_DrawMappedPatch(((curx - 8)), ((cury - 8)), 0, cursor, cmap);
+			if (skinstatscount[setupm_skinxpos][setupm_skinypos] > 1)
+			{
+				V_DrawRightAlignedThinString(curx + 23, cury + 14, V_20TRANS, va("+%d", skinstatscount[setupm_skinxpos][setupm_skinypos] - 1));
+			}
 		}
 		else
 		{
 			UINT8 cursorframe = (I_GetTime() / 4) % 7;
 
 			cursor = W_CachePatchName(va("K_CHILI%d", cursorframe + 1), PU_CACHE);
-			V_DrawFixedPatch((curx << FRACBITS) - (FRACUNIT), (cury << FRACBITS) - (FRACUNIT), FRACUNIT + (FRACUNIT >> 3), 0, cursor, NULL);
+			V_DrawScaledPatch(curx, cury, 0, cursor);
 		}
 	}
 #undef GRIDSTATOFFSET
@@ -9646,34 +9625,41 @@ static void MPSetup_DrawCharacterGrid(INT32 mx, INT32 my, INT32 statx, INT32 sta
 
 static void MPSetup_DrawColorBar(INT32 mx, INT32 my)
 {
-#define indexwidth 8
-#define charw 72
-	const INT32 colwidth = ((BASEVIDWIDTH - (2 * mx)) - charw) / (2 * indexwidth);
-	INT32 j = -colwidth;
-	INT16 col = setupm_fakecolor - colwidth;
-	INT32 x = mx;
-	INT32 w = indexwidth;
-	UINT8 h;
+#define indexwidth 6
+#define charw 16
+#define X_OFFSET -74
+	const INT32 color_index_max = 8; // FIXME: Make this a real value instead of just 4.  //((BASEVIDWIDTH - (2 * mx)) - charw) / (2 * indexwidth);
+	INT16 color_to_draw = setupm_fakecolor - color_index_max;
+	INT32 current_x = mx + X_OFFSET;
+	INT32 height_to_draw = 0;
 
-	while (col < 1)
-		col += MAXSKINCOLORS - 1;
-	while (j <= colwidth)
+	while (color_to_draw < 1)
+		color_to_draw += MAXSKINCOLORS - 1;
+
+	for (INT32 color_index = -color_index_max; color_index <= color_index_max; color_index++)
 	{
-		if (!(j++))
-			w = charw;
+		if (color_index == 0)
+			height_to_draw = charw;
 		else
-			w = indexwidth;
-		for (h = 0; h < 16; h++)
-			V_DrawFill(x, my + 176 + h, w, 1, colortranslations[col][h]);
-		if (++col >= MAXSKINCOLORS)
-			col -= MAXSKINCOLORS - 1;
-		x += w;
+			height_to_draw = color_index_max - abs(color_index);
+
+		for (INT8 shade = 0; shade < 16; shade++)
+			V_DrawFill(current_x + 2, my + shade - 18, height_to_draw, 1, colortranslations[color_to_draw][shade]);
+
+		if (++color_to_draw >= MAXSKINCOLORS)
+			color_to_draw -= MAXSKINCOLORS - 1;
+
+		current_x += height_to_draw;
 	}
 #undef indexwidth
+#undef charw
+#undef X_OFFSET
 }
 
 static void MPSetup_DrawSkinSpritePreview(INT32 mx, INT32 my)
 {
+#define CHAR_WIDTH 72
+#define X_OFFSET 0
 	INT32 flags = 0;
 	spritedef_t *sprdef;
 	spriteframe_t *sprframe;
@@ -9725,7 +9711,7 @@ static void MPSetup_DrawSkinSpritePreview(INT32 mx, INT32 my)
 		flags |= V_FLIP;	// This sprite is left/right flipped!
 
 	// draw box around guy
-	V_DrawFill(mx + 43 - (charw / 2), my + 65, charw, 84, 239);
+	V_DrawFill(mx - CHAR_WIDTH + X_OFFSET, my + 22, CHAR_WIDTH, 84, 239);
 
 	// draw player sprite
 	if (setupm_fakecolor) // inverse should never happen
@@ -9734,44 +9720,57 @@ static void MPSetup_DrawSkinSpritePreview(INT32 mx, INT32 my)
 
 		if (skins[skintodisplay].flags & SF_HIRES)
 		{
-			V_DrawFixedPatch((mx + 43) << FRACBITS,
-							 (my + 131) << FRACBITS,
+			V_DrawFixedPatch((mx - (CHAR_WIDTH / 2) + X_OFFSET) << FRACBITS,
+							 (my + 65 + 22) << FRACBITS,
 							 skins[skintodisplay].highresscale,
 							 flags, patch, colormap);
 		}
 		else
-			V_DrawMappedPatch(mx + 43, my + 131, flags, patch, colormap);
+			V_DrawMappedPatch(mx - (CHAR_WIDTH / 2) + X_OFFSET, my + 65 + 22, flags, patch, colormap);
 	}
-#undef charw
+#undef CHAR_WIDTH
 }
 
 static void M_DrawSetupMultiPlayerMenu(void)
 {
-	INT32 mx, my;
-
-	INT32 statx, staty;
-
-	mx = MP_PlayerSetupDef.x;
-	my = MP_PlayerSetupDef.y;
-
-	statx = (BASEVIDWIDTH - mx - 118);
-	staty = (my + 62);
+	patch_t *menu_icon = W_CachePatchName("M_CURSOR", PU_CACHE);
 
 	// use generic drawer for cursor, items and title
-	M_DrawGenericMenu();
+	// M_DrawGenericMenu();
 
-	MPSetup_DrawNameEntry(mx, my);
+	// Draw the labels
 
-	MPSetup_DrawSkinNameString(mx, my);
+	for (INT32 i = 0; i < MPPLAYERSETUPITEM_MAX; i++)
+	{
+		INT32 text_flags = 0;
+		INT32 label_x = MP_PlayerSetupMenu_XOffsets[i];
+		INT32 label_y = MP_PlayerSetupMenu[i].alphaKey;
+		const char *label = MP_PlayerSetupMenu[i].text;
 
-	MPSetup_DrawColorNameString(mx, my);
+		// Draw the cursor and highlight label when selected.
+		if (i == itemOn)
+		{
+			INT32 x_label_offset = -V_StringWidth(label, 0);
+			text_flags = highlightflags;
+			V_DrawScaledPatch(label_x + x_label_offset - menu_icon->width - 8, label_y, 0, menu_icon);
+		}
 
-	MPSetup_DrawCharacterGrid(mx, my, statx, staty);
+		// Draw the label for the option.
+		V_DrawRightAlignedString(label_x, label_y, text_flags, label);
+	}
+
+	MPSetup_DrawNameEntry(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_NAME], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_NAME].alphaKey);
+
+	MPSetup_DrawSkinNameString(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_CHARACTER], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_CHARACTER].alphaKey);
+
+	MPSetup_DrawColorNameString(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_COLOR], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_COLOR].alphaKey);
+
+	MPSetup_DrawCharacterGrid(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_CHARACTER], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_CHARACTER].alphaKey);
 
 	// 2.2 color bar backported with permission
-	MPSetup_DrawColorBar(mx, my);
+	MPSetup_DrawColorBar(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_COLOR], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_COLOR].alphaKey);
 
-	MPSetup_DrawSkinSpritePreview(mx, my);
+	MPSetup_DrawSkinSpritePreview(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_CHARACTER], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_CHARACTER].alphaKey);
 }
 
 // Handle 1P/2P MP Setup
@@ -9961,14 +9960,6 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 		}
 }
 
-#define SKINSELECTMENUEDIT \
-{\
-	MP_PlayerSetupMenu[0].alphaKey = 0;\
-	MP_PlayerSetupMenu[1].alphaKey = 25;\
-	MP_PlayerSetupMenu[2].alphaKey = 164;\
-	MP_PlayerSetupDef.y = 6;\
-}
-
 // start the multiplayer setup menu
 static void M_SetupMultiPlayer(INT32 choice)
 {
@@ -9998,9 +9989,6 @@ static void M_SetupMultiPlayer(INT32 choice)
 		MP_PlayerSetupMenu[2].status = (IT_GRAYEDOUT);
 	else
 		MP_PlayerSetupMenu[2].status = (IT_KEYHANDLER|IT_STRING);
-
-	//change the y offsets of the menu depending on cvar settings
-	SKINSELECTMENUEDIT
 
 	MP_PlayerSetupDef.prevMenu = currentMenu;
 	M_SetupNextMenu(&MP_PlayerSetupDef);
@@ -10036,9 +10024,6 @@ static void M_SetupMultiPlayer2(INT32 choice)
 	else
 		MP_PlayerSetupMenu[2].status = (IT_KEYHANDLER | IT_STRING);
 
-	//change the y offsets of the menu depending on cvar settings
-	SKINSELECTMENUEDIT
-
 	MP_PlayerSetupDef.prevMenu = currentMenu;
 	M_SetupNextMenu(&MP_PlayerSetupDef);
 }
@@ -10072,9 +10057,6 @@ static void M_SetupMultiPlayer3(INT32 choice)
 		MP_PlayerSetupMenu[2].status = (IT_GRAYEDOUT);
 	else
 		MP_PlayerSetupMenu[2].status = (IT_KEYHANDLER | IT_STRING);
-
-	//change the y offsets of the menu depending on cvar settings
-	SKINSELECTMENUEDIT
 
 	MP_PlayerSetupDef.prevMenu = currentMenu;
 	M_SetupNextMenu(&MP_PlayerSetupDef);
@@ -10110,14 +10092,9 @@ static void M_SetupMultiPlayer4(INT32 choice)
 	else
 		MP_PlayerSetupMenu[2].status = (IT_KEYHANDLER | IT_STRING);
 
-	//change the y offsets of the menu depending on cvar settings
-	SKINSELECTMENUEDIT
-
 	MP_PlayerSetupDef.prevMenu = currentMenu;
 	M_SetupNextMenu(&MP_PlayerSetupDef);
 }
-
-#undef SKINSELECTMENUEDIT
 
 static boolean M_QuitMultiPlayerMenu(void)
 {
