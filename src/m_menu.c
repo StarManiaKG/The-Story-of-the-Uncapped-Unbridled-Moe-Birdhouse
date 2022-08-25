@@ -9563,7 +9563,7 @@ static void MPSetup_DrawColorNameString(INT32 mx, INT32 my)
 #define GRIDSTATOFFSET 0
 #define SKINXSHIFT 55
 
-static void MPSetup_DrawStatsWindow(INT32 mx, INT32 my, INT32 statx, INT32 staty)
+static void MPSetup_DrawCharacterGrid(INT32 mx, INT32 my, INT32 statx, INT32 staty)
 {
 	statx = ((BASEVIDWIDTH / 2) - (18 * 4)) - 8 + SKINXSHIFT;
 	staty = ((BASEVIDHEIGHT / 2) - (18 * 4)) - 8;
@@ -9766,7 +9766,7 @@ static void M_DrawSetupMultiPlayerMenu(void)
 
 	MPSetup_DrawColorNameString(mx, my);
 
-	MPSetup_DrawStatsWindow(mx, my, statx, staty);
+	MPSetup_DrawCharacterGrid(mx, my, statx, staty);
 
 	// 2.2 color bar backported with permission
 	MPSetup_DrawColorBar(mx, my);
