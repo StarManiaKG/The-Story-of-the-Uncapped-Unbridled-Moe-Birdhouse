@@ -9560,8 +9560,8 @@ static void MPSetup_DrawCharacterGrid(INT32 mx, INT32 my)
 	const UINT8 *flashcol = V_GetStringColormap(highlightflags);
 
 	// Draw the background
-	V_DrawScaledPatch(mx + GRID_X_SHIFT - 16, my + GRID_Y_SHIFT - 16, 0, W_CachePatchName("K_STATBG", PU_CACHE));
-	V_DrawMappedPatch(mx + GRID_X_SHIFT - 16, my + GRID_Y_SHIFT - 16, 0, W_CachePatchName("K_STATTX", PU_CACHE), flashcol);
+	V_DrawScaledPatch(mx + GRID_X_SHIFT - 16, my + GRID_Y_SHIFT - 16, 0, W_CachePatchName("K_STABGB", PU_CACHE));
+	V_DrawMappedPatch(mx + GRID_X_SHIFT - 16, my + GRID_Y_SHIFT - 16, 0, W_CachePatchName("K_STATXB", PU_CACHE), flashcol);
 
 	// Draw the faces
 	for (INT32 speed = 0; speed < MAXSTAT; speed++)
