@@ -9667,10 +9667,6 @@ static void MPSetup_DrawSkinSpritePreview(INT32 mx, INT32 my)
 	INT32 skintodisplay = 0;
 
 	skintodisplay = setupm_fakeskin;
-	if (setupm_skinlockedselect) // show the skin we are trying to select
-		skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][setupm_skinselect];
-	else if (skinstatscount[setupm_skinxpos][setupm_skinypos] && itemOn == 1)
-		skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][(I_GetTime() / TICRATE) % SELECTEDSTATSCOUNT];
 
 	if (R_SkinAvailable(skins[skintodisplay].name) != -1)
 		sprdef = &skins[R_SkinAvailable(skins[skintodisplay].name)].spritedef;
