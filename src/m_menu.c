@@ -1051,10 +1051,10 @@ static menuitem_t MP_PlayerSetupMenu[] =
 		{IT_KEYHANDLER | IT_STRING, NULL, "Color", M_HandleSetupMultiPlayer, 157},
 };
 
-#define MP_PLAYERSETUP_GRID_X 119
+#define MP_PLAYERSETUP_GRID_X 107
 
 // This is kinda dumb.
-static INT32 MP_PlayerSetupMenu_XOffsets[3] = {60, MP_PLAYERSETUP_GRID_X, MP_PLAYERSETUP_GRID_X};
+static INT32 MP_PlayerSetupMenu_XOffsets[3] = {68, MP_PLAYERSETUP_GRID_X, MP_PLAYERSETUP_GRID_X};
 
 typedef enum
 {
@@ -9511,55 +9511,47 @@ static boolean setupm_skinlockedselect;
 
 // Skin select menu drawing functions
 
+static void MPSetup_DrawMenuLabels(void)
+{
+	patch_t *menu_icon = W_CachePatchName("M_CURSOR", PU_CACHE);
+
+	for (INT32 i = 0; i < MPPLAYERSETUPITEM_MAX; i++)
+	{
+		INT32 text_flags = 0;
+		INT32 label_x = MP_PlayerSetupMenu_XOffsets[i];
+		INT32 label_y = MP_PlayerSetupMenu[i].alphaKey;
+		const char *label = MP_PlayerSetupMenu[i].text;
+
+		// Draw the cursor and highlight label when selected.
+		if (i == itemOn)
+		{
+			INT32 x_label_offset = -V_StringWidth(label, 0);
+			text_flags = highlightflags;
+			V_DrawScaledPatch(label_x + x_label_offset - menu_icon->width - 8, label_y, 0, menu_icon);
+		}
+
+		// Draw the label for the option.
+		V_DrawRightAlignedString(label_x, label_y, text_flags, label);
+	}
+}
+
 /**
  * @brief Draws the name entry box.
  */
 static void MPSetup_DrawNameEntry(INT32 mx, INT32 my)
 {
 	// draw name string
-	M_DrawTextBox(mx + 0, my - 8, MAXPLAYERNAME, 1);
-	V_DrawString(mx + 4, my, V_ALLOWLOWERCASE, setupm_name);
+	M_DrawTextBox(mx, my - 8, MAXPLAYERNAME, 1);
+	V_DrawString(mx + 7, my, V_ALLOWLOWERCASE, setupm_name);
 
 	// draw text cursor for name
-	if (itemOn == 0 && skullAnimCounter < 4) // blink cursor
-		V_DrawCharacter(mx + 4 + V_StringWidth(setupm_name, V_ALLOWLOWERCASE), my, '_', false);
+	if (itemOn == 0 && skullAnimCounter < 4 && strlen(setupm_name) < MAXPLAYERNAME) // blink cursor
+		V_DrawCharacter(mx + 7 + V_StringWidth(setupm_name, V_ALLOWLOWERCASE), my, '_', false);
 }
 
 /**
- * @brief Draws the name of the currently selected skin.
+ * @brief Draws the Grid of skins.
  */
-static void MPSetup_DrawSkinNameString(INT32 mx, INT32 my)
-{
-	// draw skin string
-	INT32 skintodisplay = setupm_fakeskin;
-	if (setupm_skinlockedselect) // show the skin we are trying to select
-		skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][setupm_skinselect];
-	else if (skinstatscount[setupm_skinxpos][setupm_skinypos] && itemOn == 1)
-		skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][0];
-
-	if (V_StringWidth(skins[skintodisplay].realname, V_ALLOWLOWERCASE) > 72)
-		V_DrawRightAlignedThinString(mx, my + 10,
-									 ((MP_PlayerSetupMenu[2].status & IT_TYPE) == IT_SPACE ? V_TRANSLUCENT : 0) | highlightflags | V_ALLOWLOWERCASE,
-									 skins[skintodisplay].realname);
-	else
-		V_DrawRightAlignedString(mx, my + 10,
-								 ((MP_PlayerSetupMenu[2].status & IT_TYPE) == IT_SPACE ? V_TRANSLUCENT : 0) | highlightflags | V_ALLOWLOWERCASE,
-								 skins[skintodisplay].realname);
-}
-
-/**
- * @brief Draws the name of the skin color that is currently selected.
- */
-static void MPSetup_DrawColorNameString(INT32 mx, INT32 my)
-{
-	// draw the name of the color you have chosen
-	// Just so people don't go thinking that "Default" is Green.
-	V_DrawRightAlignedString(mx, my + 10, highlightflags | V_ALLOWLOWERCASE, KartColor_Names[setupm_fakecolor]); // SRB2kart
-}
-
-#define GRIDSTATOFFSET 0
-#define SKINXSHIFT 55
-
 static void MPSetup_DrawCharacterGrid(INT32 mx, INT32 my)
 {
 #define GRID_X_SHIFT 15
@@ -9619,43 +9611,33 @@ static void MPSetup_DrawCharacterGrid(INT32 mx, INT32 my)
 			V_DrawScaledPatch(curx, cury, 0, cursor);
 		}
 	}
-#undef GRIDSTATOFFSET
-#undef SKINXSHIFT
 }
 
-static void MPSetup_DrawColorBar(INT32 mx, INT32 my)
+/**
+ * @brief Draws the name of the currently selected skin.
+ */
+static void MPSetup_DrawSkinNameString(INT32 mx, INT32 my)
 {
-#define indexwidth 6
-#define charw 16
-#define X_OFFSET -74
-	const INT32 color_index_max = 8; // FIXME: Make this a real value instead of just 4.  //((BASEVIDWIDTH - (2 * mx)) - charw) / (2 * indexwidth);
-	INT16 color_to_draw = setupm_fakecolor - color_index_max;
-	INT32 current_x = mx + X_OFFSET;
-	INT32 height_to_draw = 0;
+	// draw skin string
+	INT32 skintodisplay = setupm_fakeskin;
+	if (setupm_skinlockedselect) // show the skin we are trying to select
+		skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][setupm_skinselect];
+	else if (skinstatscount[setupm_skinxpos][setupm_skinypos] && itemOn == 1)
+		skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][0];
 
-	while (color_to_draw < 1)
-		color_to_draw += MAXSKINCOLORS - 1;
-
-	for (INT32 color_index = -color_index_max; color_index <= color_index_max; color_index++)
-	{
-		if (color_index == 0)
-			height_to_draw = charw;
-		else
-			height_to_draw = color_index_max - abs(color_index);
-
-		for (INT8 shade = 0; shade < 16; shade++)
-			V_DrawFill(current_x + 2, my + shade - 18, height_to_draw, 1, colortranslations[color_to_draw][shade]);
-
-		if (++color_to_draw >= MAXSKINCOLORS)
-			color_to_draw -= MAXSKINCOLORS - 1;
-
-		current_x += height_to_draw;
-	}
-#undef indexwidth
-#undef charw
-#undef X_OFFSET
+	if (V_StringWidth(skins[skintodisplay].realname, V_ALLOWLOWERCASE) > 72)
+		V_DrawRightAlignedThinString(mx, my + 10,
+									 ((MP_PlayerSetupMenu[2].status & IT_TYPE) == IT_SPACE ? V_TRANSLUCENT : 0) | highlightflags | V_ALLOWLOWERCASE,
+									 skins[skintodisplay].realname);
+	else
+		V_DrawRightAlignedString(mx, my + 10,
+								 ((MP_PlayerSetupMenu[2].status & IT_TYPE) == IT_SPACE ? V_TRANSLUCENT : 0) | highlightflags | V_ALLOWLOWERCASE,
+								 skins[skintodisplay].realname);
 }
 
+/**
+ * @brief Draws the idle A2 frame of a skin with a background.
+ */
 static void MPSetup_DrawSkinSpritePreview(INT32 mx, INT32 my)
 {
 #define CHAR_WIDTH 72
@@ -9729,48 +9711,76 @@ static void MPSetup_DrawSkinSpritePreview(INT32 mx, INT32 my)
 			V_DrawMappedPatch(mx - (CHAR_WIDTH / 2) + X_OFFSET, my + 65 + 22, flags, patch, colormap);
 	}
 #undef CHAR_WIDTH
+#undef X_OFFSET
+}
+
+/**
+ * @brief Draws the color bar for color selection.
+ */
+static void MPSetup_DrawColorBar(INT32 mx, INT32 my)
+{
+#define indexwidth 4
+#define charw 24
+#define X_OFFSET -74
+	const INT32 color_index_max = (72 - charw) / (2 * indexwidth);
+	INT16 color_to_draw = setupm_fakecolor - color_index_max;
+	INT32 current_x = mx + X_OFFSET;
+	INT32 height_to_draw = 0;
+
+	while (color_to_draw < 1)
+		color_to_draw += MAXSKINCOLORS - 1;
+
+	for (INT32 color_index = -color_index_max; color_index <= color_index_max; color_index++)
+	{
+		if (color_index == 0)
+			height_to_draw = charw;
+		else
+			height_to_draw = indexwidth;
+
+		for (INT8 shade = 0; shade < 16; shade++)
+			V_DrawFill(current_x + 2, my + shade - 18, height_to_draw, 1, colortranslations[color_to_draw][shade]);
+
+		if (++color_to_draw >= MAXSKINCOLORS)
+			color_to_draw -= MAXSKINCOLORS - 1;
+
+		current_x += height_to_draw;
+	}
+#undef indexwidth
+#undef charw
+#undef X_OFFSET
+}
+
+/**
+ * @brief Draws the name of the skin color that is currently selected.
+ */
+static void MPSetup_DrawColorNameString(INT32 mx, INT32 my)
+{
+	// draw the name of the color you have chosen
+	// Just so people don't go thinking that "Default" is Green.
+	V_DrawRightAlignedString(mx, my + 10, highlightflags | V_ALLOWLOWERCASE, KartColor_Names[setupm_fakecolor]); // SRB2kart
+
+	if (itemOn == MPPLAYERSETUPITEM_COLOR)
+	{
+		V_DrawRightAlignedThinString(mx, my + 20, V_ALLOWLOWERCASE | V_TRANSLUCENT | V_6WIDTHSPACE, "ITEM to reset");
+	}
 }
 
 static void M_DrawSetupMultiPlayerMenu(void)
 {
-	patch_t *menu_icon = W_CachePatchName("M_CURSOR", PU_CACHE);
-
-	// use generic drawer for cursor, items and title
-	// M_DrawGenericMenu();
-
 	// Draw the labels
+	MPSetup_DrawMenuLabels();
 
-	for (INT32 i = 0; i < MPPLAYERSETUPITEM_MAX; i++)
-	{
-		INT32 text_flags = 0;
-		INT32 label_x = MP_PlayerSetupMenu_XOffsets[i];
-		INT32 label_y = MP_PlayerSetupMenu[i].alphaKey;
-		const char *label = MP_PlayerSetupMenu[i].text;
-
-		// Draw the cursor and highlight label when selected.
-		if (i == itemOn)
-		{
-			INT32 x_label_offset = -V_StringWidth(label, 0);
-			text_flags = highlightflags;
-			V_DrawScaledPatch(label_x + x_label_offset - menu_icon->width - 8, label_y, 0, menu_icon);
-		}
-
-		// Draw the label for the option.
-		V_DrawRightAlignedString(label_x, label_y, text_flags, label);
-	}
-
+	// Name Entry
 	MPSetup_DrawNameEntry(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_NAME], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_NAME].alphaKey);
 
-	MPSetup_DrawSkinNameString(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_CHARACTER], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_CHARACTER].alphaKey);
-
-	MPSetup_DrawColorNameString(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_COLOR], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_COLOR].alphaKey);
-
+	// Skin selection
 	MPSetup_DrawCharacterGrid(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_CHARACTER], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_CHARACTER].alphaKey);
+	MPSetup_DrawSkinNameString(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_CHARACTER], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_CHARACTER].alphaKey);
+	MPSetup_DrawSkinSpritePreview(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_CHARACTER], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_CHARACTER].alphaKey);
 
 	// 2.2 color bar backported with permission
 	MPSetup_DrawColorBar(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_COLOR], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_COLOR].alphaKey);
-
-	MPSetup_DrawSkinSpritePreview(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_CHARACTER], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_CHARACTER].alphaKey);
+	MPSetup_DrawColorNameString(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_COLOR], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_COLOR].alphaKey);
 }
 
 // Handle 1P/2P MP Setup
