@@ -9921,18 +9921,31 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 			setupm_fakeskin = skinstats[setupm_skinxpos][setupm_skinypos][setupm_skinselect];
 			setupm_skinlockedselect = false;
 			S_StartSound(NULL, sfx_s221);
-			break;
+			M_NextOpt();
 		}
-		if (itemOn == 1 && SELECTEDSTATSCOUNT == 1)
+		else if (itemOn == 1 && SELECTEDSTATSCOUNT == 1)
 		{
 			setupm_fakeskin = skinstats[setupm_skinxpos][setupm_skinypos][0];
 			S_StartSound(NULL, sfx_s221);
+			M_NextOpt();
 		}
 		else if (itemOn == 1 && SELECTEDSTATSCOUNT > 1)
 		{
 			setupm_skinlockedselect = true;
 			setupm_skinselect = 0;
 			S_StartSound(NULL, sfx_menu1);
+		}
+		else if (itemOn == 0)
+		{
+			S_StartSound(NULL, sfx_menu1);
+			M_NextOpt();
+			setupm_skinxpos = skins[setupm_fakeskin].kartspeed - 1;
+			setupm_skinypos = skins[setupm_fakeskin].kartweight - 1;
+		}
+		else if (itemOn == 2)
+		{
+			S_StartSound(NULL, sfx_menu1);
+			exitmenu = true;
 		}
 			break;
 
