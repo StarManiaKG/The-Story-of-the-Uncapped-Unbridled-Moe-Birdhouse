@@ -9498,10 +9498,11 @@ static UINT8      setupm_skinxpos;
 static INT32      setupm_fakeskin;
 static INT32      setupm_fakecolor;
 
-//variables used for other skin select menus
+// variables used for the grid
 static UINT8 setupm_skinypos;
 static INT32 setupm_skinselect;
 static boolean setupm_skinlockedselect;
+static boolean setupm_returntoskingridonback;
 
 #define SELECTEDSTATSCOUNT skinstatscount[setupm_skinxpos][setupm_skinypos]
 #define LASTSELECTEDSTAT skinstats[setupm_skinxpos][setupm_skinypos][skinstatscount[setupm_skinxpos][setupm_skinypos]]
@@ -9511,7 +9512,8 @@ static boolean setupm_skinlockedselect;
 
 // Skin select menu drawing functions
 
-static void MPSetup_DrawMenuLabels(void)
+static void
+MPSetup_DrawMenuLabels(void)
 {
 	patch_t *menu_icon = W_CachePatchName("M_CURSOR", PU_CACHE);
 
@@ -9959,7 +9961,10 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 	switch (choice)
 	{
 	case KEY_DOWNARROW:
-		if (setupm_skinlockedselect) break;
+		if (setupm_skinlockedselect)
+			break;
+		if (itemOn == MPPLAYERSETUPITEM_COLOR)
+			setupm_returntoskingridonback = false;
 		if (itemOn == 1 && setupm_skinypos < MAXSTAT - 1) // player skin
 			setupm_skinypos++;
 		else if (itemOn == 0)
@@ -9973,7 +9978,10 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 		break;
 
 	case KEY_UPARROW:
-		{ if (setupm_skinlockedselect) break; }
+		if (setupm_skinlockedselect)
+			break;
+		if (itemOn == MPPLAYERSETUPITEM_COLOR)
+			setupm_returntoskingridonback = false;
 		if (itemOn == 1 && setupm_skinypos > 0)
 			setupm_skinypos--;
 		else if (itemOn == 2)
@@ -10046,11 +10054,18 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 			setupm_skinlockedselect = false;
 			break;
 		}
+		else if (setupm_returntoskingridonback)
+		{
+			setupm_returntoskingridonback = false;
+			M_PrevOpt();
+			break;
+		}
 		exitmenu = true;
 		break;
 
 	case KEY_BACKSPACE:
-		if (setupm_skinlockedselect) break;
+		if (setupm_skinlockedselect)
+			break;
 		if (itemOn == 0)
 		{
 			if ((l = strlen(setupm_name)) != 0)
@@ -10071,7 +10086,8 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 		break;
 
 	case KEY_DEL:
-		if (setupm_skinlockedselect) break;
+		if (setupm_skinlockedselect)
+			break;
 		if (itemOn == 0 && (l = strlen(setupm_name)) != 0)
 		{
 			S_StartSound(NULL, sfx_menu1); // Tails
@@ -10085,12 +10101,14 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 			setupm_fakeskin = skinstats[setupm_skinxpos][setupm_skinypos][setupm_skinselect];
 			setupm_skinlockedselect = false;
 			S_StartSound(NULL, sfx_s221);
+			setupm_returntoskingridonback = true;
 			M_NextOpt();
 		}
 		else if (itemOn == 1 && SELECTEDSTATSCOUNT == 1)
 		{
 			setupm_fakeskin = skinstats[setupm_skinxpos][setupm_skinypos][0];
 			S_StartSound(NULL, sfx_s221);
+			setupm_returntoskingridonback = true;
 			M_NextOpt();
 		}
 		else if (itemOn == 1 && SELECTEDSTATSCOUNT > 1)
@@ -10111,7 +10129,7 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 			S_StartSound(NULL, sfx_menu1);
 			exitmenu = true;
 		}
-			break;
+		break;
 
 	default:
 		if (choice < 32 || choice > 127 || itemOn != 0)
@@ -10164,6 +10182,7 @@ static void M_SetupMultiPlayer(INT32 choice)
 	setupm_skinxpos = 4;
 	setupm_skinypos = 0;
 	setupm_skinlockedselect = false;
+	setupm_returntoskingridonback = false;
 
 	// For whatever reason this doesn't work right if you just use ->value
 	setupm_fakeskin = R_SkinAvailable(setupm_cvskin->string);
@@ -10198,6 +10217,7 @@ static void M_SetupMultiPlayer2(INT32 choice)
 	setupm_skinxpos = 4;
 	setupm_skinypos = 0;
 	setupm_skinlockedselect = false;
+	setupm_returntoskingridonback = false;
 
 	// For whatever reason this doesn't work right if you just use ->value
 	setupm_fakeskin = R_SkinAvailable(setupm_cvskin->string);
@@ -10232,6 +10252,7 @@ static void M_SetupMultiPlayer3(INT32 choice)
 	setupm_skinxpos = 4;
 	setupm_skinypos = 0;
 	setupm_skinlockedselect = false;
+	setupm_returntoskingridonback = false;
 
 	// For whatever reason this doesn't work right if you just use ->value
 	setupm_fakeskin = R_SkinAvailable(setupm_cvskin->string);
@@ -10266,6 +10287,7 @@ static void M_SetupMultiPlayer4(INT32 choice)
 	setupm_skinxpos = 4;
 	setupm_skinypos = 0;
 	setupm_skinlockedselect = false;
+	setupm_returntoskingridonback = false;
 
 	// For whatever reason this doesn't work right if you just use ->value
 	setupm_fakeskin = R_SkinAvailable(setupm_cvskin->string);
