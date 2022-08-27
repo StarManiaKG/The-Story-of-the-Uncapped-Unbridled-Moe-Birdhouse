@@ -9556,6 +9556,7 @@ static void MPSetup_DrawCharacterGrid(INT32 mx, INT32 my)
 {
 #define GRID_X_SHIFT 15
 #define GRID_Y_SHIFT 1
+#define GRID_WIDTH_HEIGHT ((9 * 17) + 4)
 	// Text colormap
 	const UINT8 *flashcol = V_GetStringColormap(highlightflags);
 
@@ -9585,7 +9586,7 @@ static void MPSetup_DrawCharacterGrid(INT32 mx, INT32 my)
 		}
 	}
 
-	if (itemOn == 1) // has to be on skin select part
+	if (itemOn == 1 && !setupm_skinlockedselect) // has to be on skin select part
 	{
 		patch_t *cursor;
 		INT32 curx = ((setupm_skinxpos * 17) + mx + GRID_X_SHIFT + (setupm_skinxpos / 3) * 2);
@@ -9614,16 +9615,161 @@ static void MPSetup_DrawCharacterGrid(INT32 mx, INT32 my)
 }
 
 /**
+ * @brief Draws the menu for selecting an echo character.
+ */
+static void MPSetup_DrawEchoSelectMenu(INT32 mx, INT32 my)
+{
+// TODO: Add a bunch of defines to make this easier to edit.
+#define ECHO_CIRCLE_WIDTH 30
+#define ECHO_CIRCLE_HEIGHT 10
+#define ECHO_CIRCLE_Y_OFFSET 30
+#define ECHO_BACKGROUND_WIDTH 72
+#define ECHO_BACKGROUND_HEIGHT 84
+#define ECHO_GLOBAL_Y_OFFSET -10
+
+	if (setupm_skinlockedselect)
+	{
+		INT32 left_skin_count = (skinstatscount[setupm_skinxpos][setupm_skinypos] / 2) + (skinstatscount[setupm_skinxpos][setupm_skinypos] % 2);
+		INT32 right_skin_count = (skinstatscount[setupm_skinxpos][setupm_skinypos] / 2);
+
+		fixed_t rotation_value = (skinstatscount[setupm_skinxpos][setupm_skinypos] << FRACBITS) / 2;
+
+		char *str = NULL;
+		INT32 str_width = 0;
+
+		// Darken the skin selection grid.
+		V_DrawScaledPatch(mx + GRID_X_SHIFT - 16, my + GRID_Y_SHIFT - 16, V_TRANSLUCENT, W_CachePatchName("K_STASHB", PU_CACHE));
+
+		// Draw a background
+		V_DrawFill(mx - (ECHO_CIRCLE_WIDTH / 2) + (GRID_WIDTH_HEIGHT / 2) - (ECHO_BACKGROUND_WIDTH / 2),
+				   my - (ECHO_CIRCLE_HEIGHT / 2) + (GRID_WIDTH_HEIGHT / 2) - (ECHO_BACKGROUND_HEIGHT / 2) + ECHO_GLOBAL_Y_OFFSET,
+				   ECHO_BACKGROUND_WIDTH + (ECHO_CIRCLE_WIDTH * 2),
+				   ECHO_BACKGROUND_HEIGHT + (ECHO_CIRCLE_HEIGHT * 2) + 20, 239);
+
+		// Draw the current skin's name
+		str = skins[skinstats[setupm_skinxpos][setupm_skinypos][setupm_skinselect]].realname;
+		str_width = V_StringWidth(str, 0);
+
+		if (str_width > 72)
+		{
+			V_DrawCenteredThinString(mx + (ECHO_CIRCLE_WIDTH / 2) + (GRID_WIDTH_HEIGHT / 2),
+									 my + (ECHO_CIRCLE_HEIGHT / 2) + (GRID_WIDTH_HEIGHT / 2) - (ECHO_BACKGROUND_HEIGHT / 2) + ECHO_GLOBAL_Y_OFFSET + ECHO_BACKGROUND_HEIGHT + 10,
+									 highlightflags | V_ALLOWLOWERCASE, str);
+			str_width = V_ThinStringWidth(str, 0);
+		}
+		else
+		{
+			V_DrawCenteredString(mx + (ECHO_CIRCLE_WIDTH / 2) + (GRID_WIDTH_HEIGHT / 2),
+								 my + (ECHO_CIRCLE_HEIGHT / 2) + (GRID_WIDTH_HEIGHT / 2) - (ECHO_BACKGROUND_HEIGHT / 2) + ECHO_GLOBAL_Y_OFFSET + ECHO_BACKGROUND_HEIGHT + 10,
+								 highlightflags | V_ALLOWLOWERCASE, str);
+		}
+
+		// Draw the left and right arrows
+		V_DrawCharacter(mx + (ECHO_CIRCLE_WIDTH / 2) + (GRID_WIDTH_HEIGHT / 2) - str_width / 2 - 8 - (skullAnimCounter / 5),
+						my + (ECHO_CIRCLE_HEIGHT / 2) + (GRID_WIDTH_HEIGHT / 2) - (ECHO_BACKGROUND_HEIGHT / 2) + ECHO_GLOBAL_Y_OFFSET + ECHO_BACKGROUND_HEIGHT + 10,
+						'\x1C', true);
+		V_DrawCharacter(mx + (ECHO_CIRCLE_WIDTH / 2) + (GRID_WIDTH_HEIGHT / 2) + str_width / 2 + (skullAnimCounter / 5),
+						my + (ECHO_CIRCLE_HEIGHT / 2) + (GRID_WIDTH_HEIGHT / 2) - (ECHO_BACKGROUND_HEIGHT / 2) + ECHO_GLOBAL_Y_OFFSET + ECHO_BACKGROUND_HEIGHT + 10,
+						'\x1D', true);
+
+		// Draw the a8 of each skin in the slot in a ring, hilighting the currently selected character.
+		// Right side
+		for (INT32 i = right_skin_count; i > 0; i--)
+		{
+			// Copied from the skin preview function below.
+
+			INT32 skinidx = (setupm_skinselect + i) % skinstatscount[setupm_skinxpos][setupm_skinypos];
+			INT32 skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][skinidx];
+			spritedef_t *sprdef = NULL;
+			spriteframe_t *sprframe = NULL;
+			patch_t *patch = NULL;
+			INT32 flags = 0;
+			UINT8 *cmap = NULL;
+
+			angle_t direction = FixedAngle(FixedMul(FixedDiv(i << FRACBITS, rotation_value), 180 << FRACBITS));
+			INT32 x_offset = FixedInt(FINESINE(direction >> ANGLETOFINESHIFT) * ECHO_CIRCLE_WIDTH);
+			INT32 y_offset = FixedInt(FINECOSINE(direction >> ANGLETOFINESHIFT) * ECHO_CIRCLE_HEIGHT);
+
+			if (R_SkinAvailable(skins[skintodisplay].name) != -1)
+				sprdef = &skins[R_SkinAvailable(skins[skintodisplay].name)].spritedef;
+			else
+			{
+				sprdef = &skins[0].spritedef;
+				skintodisplay = 0;
+			}
+
+			if (sprdef == NULL || sprdef->numframes <= 0) // No frames ??
+				return;									  // Can't render!
+
+			sprframe = &sprdef->spriteframes[0];
+			patch = W_CachePatchNum(sprframe->lumppat[7], PU_CACHE);
+			if (sprframe->flip & 0b10000000) // Only for first sprite (wait no this is the last sprite!)
+				flags |= V_FLIP;			 // This sprite is left/right flipped!
+
+			cmap = R_GetTranslationColormap(skintodisplay, skins[skintodisplay].prefcolor, GTC_MENUCACHE);
+
+			V_DrawMappedPatch(mx + GRID_X_SHIFT + (GRID_WIDTH_HEIGHT / 2) + x_offset,
+							  my + GRID_Y_SHIFT + (GRID_WIDTH_HEIGHT / 2) + y_offset + ECHO_CIRCLE_Y_OFFSET + ECHO_GLOBAL_Y_OFFSET,
+							  flags | V_TRANSLUCENT, patch, cmap);
+		}
+
+		// Left side
+		for (INT32 i = left_skin_count - 1; i >= 0; i--)
+		{
+			// Copied from the skin preview function below.
+
+			INT32 skinidx = setupm_skinselect - i;
+			INT32 skintodisplay = 0;
+			spritedef_t *sprdef = NULL;
+			spriteframe_t *sprframe = NULL;
+			patch_t *patch = NULL;
+			INT32 flags = 0;
+			UINT8 *cmap = NULL;
+
+			angle_t direction = FixedAngle(FixedMul(FixedDiv(-i << FRACBITS, rotation_value), 180 << FRACBITS));
+			INT32 x_offset = FixedInt(FINESINE(direction >> ANGLETOFINESHIFT) * ECHO_CIRCLE_WIDTH);
+			INT32 y_offset = FixedInt(FINECOSINE(direction >> ANGLETOFINESHIFT) * ECHO_CIRCLE_HEIGHT);
+
+			while (skinidx < 0)
+				skinidx += skinstatscount[setupm_skinxpos][setupm_skinypos];
+
+			skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][skinidx];
+
+			if (R_SkinAvailable(skins[skintodisplay].name) != -1)
+				sprdef = &skins[R_SkinAvailable(skins[skintodisplay].name)].spritedef;
+			else
+			{
+				sprdef = &skins[0].spritedef;
+				skintodisplay = 0;
+			}
+
+			if (sprdef == NULL || sprdef->numframes <= 0) // No frames ??
+				return;									  // Can't render!
+
+			sprframe = &sprdef->spriteframes[0];
+			patch = W_CachePatchNum(sprframe->lumppat[7], PU_CACHE);
+			if (sprframe->flip & 0b10000000) // Only for first sprite (wait no this is the last sprite!)
+				flags |= V_FLIP;			 // This sprite is left/right flipped!
+
+			cmap = R_GetTranslationColormap(skintodisplay, skins[skintodisplay].prefcolor, GTC_MENUCACHE);
+
+			if (i != 0)
+				flags |= V_TRANSLUCENT;
+
+			V_DrawMappedPatch(mx + GRID_X_SHIFT + (GRID_WIDTH_HEIGHT / 2) + x_offset,
+							  my + GRID_Y_SHIFT + (GRID_WIDTH_HEIGHT / 2) + y_offset + ECHO_CIRCLE_Y_OFFSET + ECHO_GLOBAL_Y_OFFSET,
+							  flags, patch, cmap);
+		}
+	}
+}
+
+/**
  * @brief Draws the name of the currently selected skin.
  */
 static void MPSetup_DrawSkinNameString(INT32 mx, INT32 my)
 {
 	// draw skin string
 	INT32 skintodisplay = setupm_fakeskin;
-	if (setupm_skinlockedselect) // show the skin we are trying to select
-		skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][setupm_skinselect];
-	else if (skinstatscount[setupm_skinxpos][setupm_skinypos] && itemOn == 1)
-		skintodisplay = skinstats[setupm_skinxpos][setupm_skinypos][0];
 
 	if (V_StringWidth(skins[skintodisplay].realname, V_ALLOWLOWERCASE) > 72)
 		V_DrawRightAlignedThinString(mx, my + 10,
@@ -9751,14 +9897,35 @@ static void MPSetup_DrawColorBar(INT32 mx, INT32 my)
  */
 static void MPSetup_DrawColorNameString(INT32 mx, INT32 my)
 {
-	// draw the name of the color you have chosen
-	// Just so people don't go thinking that "Default" is Green.
-	V_DrawRightAlignedString(mx, my + 10, highlightflags | V_ALLOWLOWERCASE, KartColor_Names[setupm_fakecolor]); // SRB2kart
+	INT32 x_offset = 0;
+	INT32 str_width = V_StringWidth(KartColor_Names[setupm_fakecolor], V_ALLOWLOWERCASE);
+	boolean thin = false;
+
+	if (str_width > 72)
+	{
+		str_width = V_ThinStringWidth(KartColor_Names[setupm_fakecolor], V_ALLOWLOWERCASE);
+		thin = true;
+	}
 
 	if (itemOn == MPPLAYERSETUPITEM_COLOR)
 	{
+		x_offset = -8;
 		V_DrawRightAlignedThinString(mx, my + 20, V_ALLOWLOWERCASE | V_TRANSLUCENT | V_6WIDTHSPACE, "ITEM to reset");
+
+		// Draw the arrows!
+		V_DrawCharacter(mx - 16 - str_width - (skullAnimCounter / 5),
+						my + 10,
+						'\x1C', true);
+		V_DrawCharacter(mx - 8 + (skullAnimCounter / 5),
+						my + 10,
+						'\x1D', true);
 	}
+	// draw the name of the color you have chosen
+	// Just so people don't go thinking that "Default" is Green.
+	if (thin)
+		V_DrawRightAlignedThinString(mx + x_offset, my + 10, highlightflags | V_ALLOWLOWERCASE, KartColor_Names[setupm_fakecolor]);
+	else
+		V_DrawRightAlignedString(mx + x_offset, my + 10, highlightflags | V_ALLOWLOWERCASE, KartColor_Names[setupm_fakecolor]); // SRB2kart
 }
 
 static void M_DrawSetupMultiPlayerMenu(void)
@@ -9771,6 +9938,7 @@ static void M_DrawSetupMultiPlayerMenu(void)
 
 	// Skin selection
 	MPSetup_DrawCharacterGrid(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_CHARACTER], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_CHARACTER].alphaKey);
+	MPSetup_DrawEchoSelectMenu(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_CHARACTER], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_CHARACTER].alphaKey);
 	MPSetup_DrawSkinNameString(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_CHARACTER], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_CHARACTER].alphaKey);
 	MPSetup_DrawSkinSpritePreview(MP_PlayerSetupMenu_XOffsets[MPPLAYERSETUPITEM_CHARACTER], MP_PlayerSetupMenu[MPPLAYERSETUPITEM_CHARACTER].alphaKey);
 
