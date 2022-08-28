@@ -9601,10 +9601,10 @@ static void MPSetup_DrawCharacterGrid(INT32 mx, INT32 my)
 
 		if (skinstatscount[setupm_skinxpos][setupm_skinypos] > 0)
 		{
-			UINT8 *cmap = R_GetTranslationColormap(setupm_skinselect, setupm_fakecolor, GTC_MENUCACHE);
-			INT32 skinn = skinstats[setupm_skinxpos][setupm_skinypos][0];
+			INT32 skin_index = skinstats[setupm_skinxpos][setupm_skinypos][0];
+			UINT8 *cmap = R_GetTranslationColormap(skin_index, setupm_fakecolor, GTC_MENUCACHE);
 
-			cursor = facewantprefix[skinn];
+			cursor = facewantprefix[skin_index];
 			V_DrawMappedPatch(((curx - 8)), ((cury - 8)), 0, cursor, cmap);
 			if (skinstatscount[setupm_skinxpos][setupm_skinypos] > 1)
 			{
@@ -9697,6 +9697,9 @@ static void MPSetup_DrawEchoSelectMenu(INT32 mx, INT32 my)
 			INT32 x_offset = FixedInt(FINESINE(direction >> ANGLETOFINESHIFT) * ECHO_CIRCLE_WIDTH);
 			INT32 y_offset = FixedInt(FINECOSINE(direction >> ANGLETOFINESHIFT) * ECHO_CIRCLE_HEIGHT);
 
+			INT32 x_pos = mx + GRID_X_SHIFT + (GRID_WIDTH_HEIGHT / 2) + x_offset;
+			INT32 y_pos = my + GRID_Y_SHIFT + (GRID_WIDTH_HEIGHT / 2) + y_offset + ECHO_CIRCLE_Y_OFFSET + ECHO_GLOBAL_Y_OFFSET;
+
 			if (R_SkinAvailable(skins[skintodisplay].name) != -1)
 				sprdef = &skins[R_SkinAvailable(skins[skintodisplay].name)].spritedef;
 			else
@@ -9715,9 +9718,13 @@ static void MPSetup_DrawEchoSelectMenu(INT32 mx, INT32 my)
 
 			cmap = R_GetTranslationColormap(skintodisplay, skins[skintodisplay].prefcolor, GTC_MENUCACHE);
 
-			V_DrawMappedPatch(mx + GRID_X_SHIFT + (GRID_WIDTH_HEIGHT / 2) + x_offset,
-							  my + GRID_Y_SHIFT + (GRID_WIDTH_HEIGHT / 2) + y_offset + ECHO_CIRCLE_Y_OFFSET + ECHO_GLOBAL_Y_OFFSET,
-							  flags | V_TRANSLUCENT, patch, cmap);
+			if (skins[skintodisplay].flags & SF_HIRES)
+			{
+				V_DrawFixedPatch(x_pos << FRACBITS, y_pos << FRACBITS,
+								 skins[skintodisplay].highresscale, flags | V_TRANSLUCENT, patch, cmap);
+			}
+			else
+				V_DrawMappedPatch(x_pos, y_pos, flags | V_TRANSLUCENT, patch, cmap);
 		}
 
 		// Left side
@@ -9736,6 +9743,9 @@ static void MPSetup_DrawEchoSelectMenu(INT32 mx, INT32 my)
 			angle_t direction = FixedAngle(FixedMul(FixedDiv(-i << FRACBITS, rotation_value), 180 << FRACBITS));
 			INT32 x_offset = FixedInt(FINESINE(direction >> ANGLETOFINESHIFT) * ECHO_CIRCLE_WIDTH);
 			INT32 y_offset = FixedInt(FINECOSINE(direction >> ANGLETOFINESHIFT) * ECHO_CIRCLE_HEIGHT);
+
+			INT32 x_pos = mx + GRID_X_SHIFT + (GRID_WIDTH_HEIGHT / 2) + x_offset;
+			INT32 y_pos = my + GRID_Y_SHIFT + (GRID_WIDTH_HEIGHT / 2) + y_offset + ECHO_CIRCLE_Y_OFFSET + ECHO_GLOBAL_Y_OFFSET;
 
 			while (skinidx < 0)
 				skinidx += skinstatscount[setupm_skinxpos][setupm_skinypos];
@@ -9763,9 +9773,13 @@ static void MPSetup_DrawEchoSelectMenu(INT32 mx, INT32 my)
 			if (i != 0)
 				flags |= V_TRANSLUCENT;
 
-			V_DrawMappedPatch(mx + GRID_X_SHIFT + (GRID_WIDTH_HEIGHT / 2) + x_offset,
-							  my + GRID_Y_SHIFT + (GRID_WIDTH_HEIGHT / 2) + y_offset + ECHO_CIRCLE_Y_OFFSET + ECHO_GLOBAL_Y_OFFSET,
-							  flags, patch, cmap);
+			if (skins[skintodisplay].flags & SF_HIRES)
+			{
+				V_DrawFixedPatch(x_pos << FRACBITS, y_pos << FRACBITS,
+								 skins[skintodisplay].highresscale, flags, patch, cmap);
+			}
+			else
+				V_DrawMappedPatch(x_pos, y_pos, flags, patch, cmap);
 		}
 	}
 }
