@@ -9590,6 +9590,10 @@ static void MPSetup_DrawCharacterGrid(INT32 mx, INT32 my)
 			cmap = R_GetTranslationColormap(skin_index, skins[skin_index].prefcolor, GTC_MENUCACHE);
 
 			V_DrawMappedPatch(x, y, 0, face, cmap);
+
+			// draw a dot if there's more than 1 skin in this slot
+			if (skinstatscount[speed][weight] > 1)
+				V_DrawMappedPatch(x + 14, y + 14, 0, W_CachePatchName("K_ECHOID", PU_CACHE), R_GetTranslationColormap(0, SKINCOLOR_RED, GTC_MENUCACHE));
 		}
 	}
 
