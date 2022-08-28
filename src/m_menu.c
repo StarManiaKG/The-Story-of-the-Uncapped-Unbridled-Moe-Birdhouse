@@ -8622,7 +8622,7 @@ static void M_DrawConnectMenu(void)
 	// Page num
 	V_DrawRightAlignedString(BASEVIDWIDTH - currentMenu->x, currentMenu->y + MP_ConnectMenu[mp_connect_page].alphaKey,
 	                         highlightflags, va("%u of %d", serverlistpage+1, numPages));
-	
+
 	// Did you change the Server Browser address? Have a little reminder.
 	int mservflags = V_ALLOWLOWERCASE;
 	if (CV_IsSetToDefault(&cv_masterserver))
@@ -9285,7 +9285,7 @@ Update the maxplayers label...
 			if (itemOn == 2 && i == setupm_pselect)
 			{
 				static fixed_t cursorframe = 0;
-				
+
 				cursorframe += renderdeltatics / 4;
 				for (; cursorframe > 7 * FRACUNIT; cursorframe -= 7 * FRACUNIT) {}
 
@@ -9532,6 +9532,11 @@ MPSetup_DrawMenuLabels(void)
 			V_DrawScaledPatch(label_x + x_label_offset - menu_icon->width - 8, label_y, 0, menu_icon);
 		}
 
+		if (MP_PlayerSetupMenu[i].status & IT_TRANSTEXT)
+		{
+			text_flags |= V_TRANSLUCENT;
+		}
+
 		// Draw the label for the option.
 		V_DrawRightAlignedString(label_x, label_y, text_flags, label);
 	}
@@ -9772,6 +9777,10 @@ static void MPSetup_DrawSkinNameString(INT32 mx, INT32 my)
 {
 	// draw skin string
 	INT32 skintodisplay = setupm_fakeskin;
+	UINT32 text_flags = 0;
+
+	if (MP_PlayerSetupMenu[1].status & IT_TRANSTEXT)
+		text_flags |= V_TRANSLUCENT;
 
 	if (V_StringWidth(skins[skintodisplay].realname, V_ALLOWLOWERCASE) > 72)
 		V_DrawRightAlignedThinString(mx, my + 10,
@@ -10104,6 +10113,11 @@ static void M_HandleSetupMultiPlayer(INT32 choice)
 			setupm_returntoskingridonback = true;
 			M_NextOpt();
 		}
+		else if (itemOn == 1 && (MP_PlayerSetupMenu[1].status & IT_GRAYEDOUT) == IT_GRAYEDOUT)
+		{
+			// Play a sound to tell the user they can't change skins right now.
+			S_StartSound(NULL, sfx_s26d);
+		}
 		else if (itemOn == 1 && SELECTEDSTATSCOUNT == 1)
 		{
 			setupm_fakeskin = skinstats[setupm_skinxpos][setupm_skinypos][0];
@@ -10192,9 +10206,9 @@ static void M_SetupMultiPlayer(INT32 choice)
 
 	// disable skin changes if we can't actually change skins
 	if (!CanChangeSkin(consoleplayer))
-		MP_PlayerSetupMenu[2].status = (IT_GRAYEDOUT);
+		MP_PlayerSetupMenu[1].status = (IT_GRAYEDOUT);
 	else
-		MP_PlayerSetupMenu[2].status = (IT_KEYHANDLER|IT_STRING);
+		MP_PlayerSetupMenu[1].status = (IT_KEYHANDLER | IT_STRING);
 
 	MP_PlayerSetupDef.prevMenu = currentMenu;
 	M_SetupNextMenu(&MP_PlayerSetupDef);
@@ -10227,9 +10241,9 @@ static void M_SetupMultiPlayer2(INT32 choice)
 
 	// disable skin changes if we can't actually change skins
 	if (splitscreen && !CanChangeSkin(displayplayers[1]))
-		MP_PlayerSetupMenu[2].status = (IT_GRAYEDOUT);
+		MP_PlayerSetupMenu[1].status = (IT_GRAYEDOUT);
 	else
-		MP_PlayerSetupMenu[2].status = (IT_KEYHANDLER | IT_STRING);
+		MP_PlayerSetupMenu[1].status = (IT_KEYHANDLER | IT_STRING);
 
 	MP_PlayerSetupDef.prevMenu = currentMenu;
 	M_SetupNextMenu(&MP_PlayerSetupDef);
@@ -10262,9 +10276,9 @@ static void M_SetupMultiPlayer3(INT32 choice)
 
 	// disable skin changes if we can't actually change skins
 	if (splitscreen > 1 && !CanChangeSkin(displayplayers[2]))
-		MP_PlayerSetupMenu[2].status = (IT_GRAYEDOUT);
+		MP_PlayerSetupMenu[1].status = (IT_GRAYEDOUT);
 	else
-		MP_PlayerSetupMenu[2].status = (IT_KEYHANDLER | IT_STRING);
+		MP_PlayerSetupMenu[1].status = (IT_KEYHANDLER | IT_STRING);
 
 	MP_PlayerSetupDef.prevMenu = currentMenu;
 	M_SetupNextMenu(&MP_PlayerSetupDef);
@@ -10297,9 +10311,9 @@ static void M_SetupMultiPlayer4(INT32 choice)
 
 	// disable skin changes if we can't actually change skins
 	if (splitscreen > 2 && !CanChangeSkin(displayplayers[3]))
-		MP_PlayerSetupMenu[2].status = (IT_GRAYEDOUT);
+		MP_PlayerSetupMenu[1].status = (IT_GRAYEDOUT);
 	else
-		MP_PlayerSetupMenu[2].status = (IT_KEYHANDLER | IT_STRING);
+		MP_PlayerSetupMenu[1].status = (IT_KEYHANDLER | IT_STRING);
 
 	MP_PlayerSetupDef.prevMenu = currentMenu;
 	M_SetupNextMenu(&MP_PlayerSetupDef);
