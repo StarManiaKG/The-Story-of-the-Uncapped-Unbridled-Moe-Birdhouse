@@ -5281,7 +5281,6 @@ static void M_HandleAddons(INT32 choice)
 		case KEY_ESCAPE:
 			exitmenu = true;
 			break;
-		
 		case KEY_LSHIFT:
 		case KEY_RSHIFT:
 			autoloadmod = true;
