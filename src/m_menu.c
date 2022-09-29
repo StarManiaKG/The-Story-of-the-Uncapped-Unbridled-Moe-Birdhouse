@@ -5294,7 +5294,7 @@ static void M_HandleAddons(INT32 choice)
 				//FIL_FileOK
 
 				boolean refresh = true;
-				boolean autoloadmessage = (M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO));
+				int autoloadmessage = M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
 
 				if (!dirmenu[dir_on[menudepthleft]])
 					M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
@@ -5379,9 +5379,6 @@ static void M_HandleAddons(INT32 choice)
 				}
 				if (refresh)
 					refreshdirmenu |= REFRESHDIR_NORMAL;
-				
-				// free buffer
-				Z_Free(buf);
 			}
 			break;
 
