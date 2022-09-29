@@ -5280,6 +5280,7 @@ static void M_HandleAddons(INT32 choice)
 		case KEY_LSHIFT:
 		case KEY_RSHIFT:
 			{
+				boolean refresh = true;
 				if (!dirmenu[dir_on[menudepthleft]])
 				{
 					autoloadmod = true;
@@ -5367,7 +5368,7 @@ static void M_HandleAddons(INT32 choice)
 		default:
 			break;
 	}
-	
+
 	if (exitmenu)
 	{
 		closefilemenu(true);
