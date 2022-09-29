@@ -5197,8 +5197,10 @@ static void M_HandleAddons(INT32 choice)
 			{
 				boolean refresh = true;
 				if (!dirmenu[dir_on[menudepthleft]])
+				{
 					CONS_Printf(M_GetText("sonic"));
 					S_StartSound(NULL, sfx_s26d);
+				}
 				else
 				{
 					switch (dirmenu[dir_on[menudepthleft]][DIR_TYPE])
