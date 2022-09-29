@@ -5373,7 +5373,7 @@ static void M_HandleAddons(INT32 choice)
 							M_StartMessage(va("%c%s\x80\nThis file may not be a console script. Plus, you're trying to Autoload a console script.\nAttempt to run anyways? \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
 							break;
 						case EXT_CFG:
-							M_AddonExec(KEY_ENTER);
+							M_AddonExec(KEY_LSHIFT);
 							break;
 						case EXT_LUA:
 	#ifndef HAVE_BLUA
@@ -5393,7 +5393,7 @@ static void M_HandleAddons(INT32 choice)
 						default:
 							autoloadmod = true;
 							S_StartSound(NULL, sfx_s26d);
-							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec(KEY_LSHIFT),MM_YESNO);
+							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
 					}
 				}
 				if (refresh)
