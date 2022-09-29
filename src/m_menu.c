@@ -5099,7 +5099,7 @@ static void M_DrawAddons(void)
 
 static void M_AddonExec(INT32 ch)
 {
-	if (ch != 'y' && ch != KEY_ENTER && ch != KEY_SHIFT)
+	if (ch != 'y' && ch != KEY_ENTER && (ch != KEY_LSHIFT || ch != KEY_RSHIFT))
 		return;
 
 	S_StartSound(NULL, sfx_zoom);
@@ -5279,7 +5279,7 @@ static void M_HandleAddons(INT32 choice)
 			exitmenu = true;
 			break;
 		
-		case KEY_SHIFT:
+		case KEY_LSHIFT || KEY_RSHIFT:
 			autoloadmod = true;
 			M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
 			break;
