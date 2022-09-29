@@ -5099,10 +5099,9 @@ static void M_DrawAddons(void)
 
 static void M_AddonExec(INT32 ch)
 {
-	if (ch != 'y' && ch != KEY_ENTER)
+	if (ch != 'y' && ch != KEY_ENTER && ch != KEY_SHIFT)
 		return;
 
-	CONS_Printf(M_GetText("sonic"))
 	S_StartSound(NULL, sfx_zoom);
 	COM_BufAddText(va("exec \"%s%s\"", menupath, dirmenu[dir_on[menudepthleft]]+DIR_STRING));
 }
@@ -5147,6 +5146,7 @@ static boolean M_ChangeStringAddons(INT32 choice)
 
 static void M_HandleAddons(INT32 choice)
 {
+	boolean autoloadmod = false; // autoload a mod on game startup, like the .kart files
 	boolean exitmenu = false; // exit to previous menu
 
 	if (M_ChangeStringAddons(choice))
@@ -5197,6 +5197,7 @@ static void M_HandleAddons(INT32 choice)
 			{
 				boolean refresh = true;
 				if (!dirmenu[dir_on[menudepthleft]])
+					CONS_Printf(M_GetText("sonic"));
 					S_StartSound(NULL, sfx_s26d);
 				else
 				{
@@ -5277,7 +5278,11 @@ static void M_HandleAddons(INT32 choice)
 		case KEY_ESCAPE:
 			exitmenu = true;
 			break;
-
+		
+		case KEY_SHIFT:
+			autoloadmod = true;
+			M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
+			break;
 		default:
 			break;
 	}
@@ -5293,6 +5298,10 @@ static void M_HandleAddons(INT32 choice)
 		else
 			M_ClearMenus(true);
 	}
+	/*
+	if (autoloadmod)
+		--sonic
+	*/
 }
 
 // ---- REPLAY HUT -----
