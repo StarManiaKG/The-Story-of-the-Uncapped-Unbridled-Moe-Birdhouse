@@ -5294,7 +5294,6 @@ static void M_HandleAddons(INT32 choice)
 				//FIL_FileOK
 
 				boolean refresh = true;
-				char autoloadmessage[M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO)];
 
 				/*
 				INT32 filenum = netbuffer->u.filetxpak.fileid;
@@ -5321,7 +5320,7 @@ static void M_HandleAddons(INT32 choice)
 				{
 					M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
 
-					if (autoloadmessage)
+					if ((M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO)) == 0)
 					{
 						autoloadmod = true;
 						S_StartSound(NULL, sfx_s26d);
