@@ -5288,8 +5288,26 @@ static void M_HandleAddons(INT32 choice)
 				boolean refresh = true;
 				boolean autoloadmessage = M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
 				
-				if (demolist[dir_on[menudepthleft]].type)
-					lumpnum = W_CheckNumForName(va("%sP", G_BuildMapName(demolist[dir_on[menudepthleft]].map)));
+				switch (demolist[dir_on[menudepthleft]].type)
+				{
+				case MD_NOTLOADED:
+					V_DrawCenteredString(160, 40, V_SNAPTOTOP, "Loading replay information...");
+					break;
+
+				case MD_INVALID:
+					V_DrawCenteredString(160, 40, V_SNAPTOTOP|warningflags, "This replay cannot be played.");
+					break;
+
+				case MD_SUBDIR:
+					break; // Can't think of anything to draw here right now
+
+				case MD_OUTDATED:
+					V_DrawThinString(17, 64, V_SNAPTOTOP|V_ALLOWLOWERCASE|V_TRANSLUCENT|highlightflags, "Recorded on an outdated version.");
+					/*fallthru*/
+				default:
+					if (demolist[dir_on[menudepthleft]].type)
+						lumpnum = W_CheckNumForName(va("%sP", G_BuildMapName(demolist[dir_on[menudepthleft]].map)));
+				}
 
 				if (!dirmenu[dir_on[menudepthleft]])
 					M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
