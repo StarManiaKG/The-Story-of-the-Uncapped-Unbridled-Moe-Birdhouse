@@ -5198,7 +5198,7 @@ static void M_HandleAddons(INT32 choice)
 				boolean refresh = true;
 				if (!dirmenu[dir_on[menudepthleft]])
 				{
-					CONS_Printf(M_GetText("sonic"));
+					M_StartMessage(va("%c%s\x80\nI dislike you.\n\n(Press a key)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), M_AddonsHeaderPath()),NULL,MM_NOTHING);
 					S_StartSound(NULL, sfx_s26d);
 				}
 				else
@@ -5269,6 +5269,7 @@ static void M_HandleAddons(INT32 choice)
 							COM_BufAddText(va("addfile \"%s%s\"", menupath, dirmenu[dir_on[menudepthleft]]+DIR_STRING));
 							break;
 						default:
+							M_StartMessage(va("%c%s\x80\nI dislike you.\n\n(Press a key)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), M_AddonsHeaderPath()),NULL,MM_NOTHING);
 							S_StartSound(NULL, sfx_s26d);
 					}
 				}
