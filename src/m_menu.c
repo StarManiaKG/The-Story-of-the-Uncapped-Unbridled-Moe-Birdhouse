@@ -5146,8 +5146,6 @@ static boolean M_ChangeStringAddons(INT32 choice)
 
 static void M_HandleAddons(INT32 choice)
 {
-	lumpnum_t lumpnum;
-
 	boolean autoloadmod = false; // autoload a mod on game startup, like the .kart files
 	boolean exitmenu = false; // exit to previous menu
 
@@ -5285,10 +5283,22 @@ static void M_HandleAddons(INT32 choice)
 		case KEY_LSHIFT:
 		case KEY_RSHIFT:
 			{
+				UINT8 **cp;
+				INT32 AUTOLOADEDFILES;
+
+				char filename[256];
+				filestatus_t ncs = FS_NOTCHECKED;
+
+				READSTRINGN(*cp, filename, 255);
+
+				//FIL_FileOK
+
+				// insert text file into the command buffer
+				COM_BufAddText((char *)buf);
+				COM_BufAddText("\n");
+
 				boolean refresh = true;
 				boolean autoloadmessage = M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
-				
-				lumpnum = W_CheckNumForName(va("%sP", (dirmenu[dir_on[menudepthleft]].name)));
 
 				if (!dirmenu[dir_on[menudepthleft]])
 					M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
@@ -5373,6 +5383,9 @@ static void M_HandleAddons(INT32 choice)
 				}
 				if (refresh)
 					refreshdirmenu |= REFRESHDIR_NORMAL;
+				
+				// free buffer
+				Z_Free(buf);
 			}
 			break;
 

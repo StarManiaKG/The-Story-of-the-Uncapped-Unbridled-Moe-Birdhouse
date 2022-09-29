@@ -996,6 +996,9 @@ static void IdentifyVersion(void)
 #ifdef USE_PATCH_KART
 	D_AddFile(va(pandf,srb2waddir,"patch.kart"), startupwadfiles);
 #endif
+	
+	//if (autoloadedmods)
+		//D_AddFile(va(pandf,srb2waddir,autoloadedmods), startupwadfiles);
 
 #if !defined (HAVE_SDL) || defined (HAVE_MIXER)
 #define MUSICTEST(str) \
