@@ -5294,7 +5294,28 @@ static void M_HandleAddons(INT32 choice)
 				//FIL_FileOK
 
 				boolean refresh = true;
-				static boolean autoloadmessage = M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
+				char boolean autoloadmessage = M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
+
+				/*
+				INT32 filenum = netbuffer->u.filetxpak.fileid;
+				fileneeded_t *file = &fileneeded[filenum];
+				char *filename = file->filename;
+				static INT32 filetime = 0;
+
+				if (!(strcmp(filename, "srb2.srb")
+					&& strcmp(filename, "srb2.wad")
+					&& strcmp(filename, "patch.dta")
+					//&& strcmp(filename, "music.dta")
+					&& strcmp(filename, "gfx.kart")
+					&& strcmp(filename, "textures.kart")
+					&& strcmp(filename, "chars.kart")
+					&& strcmp(filename, "maps.kart")
+					&& strcmp(filename, "sounds.kart")
+					&& strcmp(filename, "music.kart")
+					&& strcmp(filename, "patch.kart")
+					))
+					I_Error("Tried to download \"%s\"", filename);
+				*/
 
 				if (!dirmenu[dir_on[menudepthleft]])
 				{
@@ -5376,7 +5397,7 @@ static void M_HandleAddons(INT32 choice)
 						default:
 							autoloadmod = true;
 							S_StartSound(NULL, sfx_s26d);
-							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
+							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec(case ? KEY_LSHIFT : KEY_RSHIFT),MM_YESNO);
 					}
 				}
 				if (refresh)
