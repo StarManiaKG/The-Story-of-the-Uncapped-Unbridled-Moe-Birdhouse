@@ -5281,12 +5281,15 @@ static void M_HandleAddons(INT32 choice)
 		case KEY_RSHIFT:
 			{
 				boolean refresh = true;
+				boolean autoloadmessage = M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
 				if (!dirmenu[dir_on[menudepthleft]])
-				{
-					autoloadmod = true;
-					S_StartSound(NULL, sfx_s26d);
 					M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
-				}
+
+					if (autoloadmessage)
+					{
+						autoloadmod = true;
+						S_StartSound(NULL, sfx_s26d);
+					}
 				else
 				{
 					switch (dirmenu[dir_on[menudepthleft]][DIR_TYPE])
@@ -5301,7 +5304,7 @@ static void M_HandleAddons(INT32 choice)
 								if (!preparefilemenu(false, false))
 								{
 									S_StartSound(NULL, sfx_s224);
-									M_StartMessage(va("%c%s\x80\nThis folder is empty.\n\n(Press a key)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), M_AddonsHeaderPath()),NULL,MM_NOTHING);
+									M_StartMessage(va("%c%s\x80\nThis folder is empty. You can't Autoload a Folder Anyways, Silly.\n\n(Press a key)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), M_AddonsHeaderPath()),NULL,MM_NOTHING);
 									menupath[menupathindex[++menudepthleft]] = 0;
 
 									if (!preparefilemenu(true, false))
@@ -5334,7 +5337,7 @@ static void M_HandleAddons(INT32 choice)
 							}
 							break;
 						case EXT_TXT:
-							M_StartMessage(va("%c%s\x80\nThis file may not be a console script.\nAttempt to run anyways? \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
+							M_StartMessage(va("%c%s\x80\nThis file may not be a console script. Plus, you're trying to Autoload a console script.\nAttempt to run anyways? \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
 							break;
 						case EXT_CFG:
 							M_AddonExec(KEY_ENTER);
@@ -5342,7 +5345,7 @@ static void M_HandleAddons(INT32 choice)
 						case EXT_LUA:
 	#ifndef HAVE_BLUA
 							S_StartSound(NULL, sfx_s26d);
-							M_StartMessage(va("%c%s\x80\nThis version of SRB2Kart does not\nhave support for .lua files.\n\n(Press a key)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),NULL,MM_NOTHING);
+							M_StartMessage(va("%c%s\x80\nThis version of SRB2Kart does not\nhave support for .lua files. Why you would turn this flag on, I have no idea.\n\n(Press a key)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),NULL,MM_NOTHING);
 							break;
 	#endif
 						// else intentional fallthrough
@@ -5369,6 +5372,9 @@ static void M_HandleAddons(INT32 choice)
 			break;
 	}
 
+	if (autoloadmod)
+		S_StartSound(NULL, sfx_s26d);
+
 	if (exitmenu)
 	{
 		closefilemenu(true);
@@ -5381,10 +5387,6 @@ static void M_HandleAddons(INT32 choice)
 		else
 			M_ClearMenus(true);
 	}
-	/*
-	if (autoloadmod)
-		--sonic
-	*/
 }
 
 // ---- REPLAY HUT -----
