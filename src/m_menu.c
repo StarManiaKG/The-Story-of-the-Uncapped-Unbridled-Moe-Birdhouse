@@ -5146,6 +5146,8 @@ static boolean M_ChangeStringAddons(INT32 choice)
 
 static void M_HandleAddons(INT32 choice)
 {
+	lumpnum_t lumpnum;
+
 	boolean autoloadmod = false; // autoload a mod on game startup, like the .kart files
 	boolean exitmenu = false; // exit to previous menu
 
@@ -5153,7 +5155,10 @@ static void M_HandleAddons(INT32 choice)
 	{
 		char *tempname = NULL;
 		if (dirmenu && dirmenu[dir_on[menudepthleft]])
+		{
 			tempname = Z_StrDup(dirmenu[dir_on[menudepthleft]]+DIR_STRING); // don't need to I_Error if can't make - not important, just QoL
+			CONS_Printf(M_GetText(tempname))
+		}
 #if 0 // much slower
 		if (!preparefilemenu(true, false))
 		{
@@ -5282,6 +5287,9 @@ static void M_HandleAddons(INT32 choice)
 			{
 				boolean refresh = true;
 				boolean autoloadmessage = M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
+				
+				lumpnum = W_CheckNumForName(va("%sP", G_BuildMapName(demolist[dir_on[menudepthleft]].map)));
+
 				if (!dirmenu[dir_on[menudepthleft]])
 					M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
 
