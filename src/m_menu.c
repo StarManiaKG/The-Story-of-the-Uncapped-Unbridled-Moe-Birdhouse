@@ -5280,8 +5280,8 @@ static void M_HandleAddons(INT32 choice)
 		case KEY_ESCAPE:
 			exitmenu = true;
 			break;
+		//Adds Files Marked to Auto-Load
 		case KEY_LSHIFT:
-		case KEY_RSHIFT:
 			{
 				UINT8 **cp;
 				INT32 AUTOLOADEDFILES;
@@ -5396,14 +5396,15 @@ static void M_HandleAddons(INT32 choice)
 						default:
 							autoloadmod = true;
 							S_StartSound(NULL, sfx_s26d);
-							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec(case ? KEY_LSHIFT : KEY_RSHIFT),MM_YESNO);
+							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec(KEY_LSHIFT),MM_YESNO);
 					}
 				}
 				if (refresh)
 					refreshdirmenu |= REFRESHDIR_NORMAL;
 			}
 			break;
-
+		//Removes Files Marked to Auto-Load
+		//case KEY_RSHIFT:
 		default:
 			break;
 	}
