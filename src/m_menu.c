@@ -5197,10 +5197,7 @@ static void M_HandleAddons(INT32 choice)
 			{
 				boolean refresh = true;
 				if (!dirmenu[dir_on[menudepthleft]])
-				{
-					M_StartMessage(va("%c%s\x80\nI dislike you.\n\n(Press a key)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), M_AddonsHeaderPath()),NULL,MM_NOTHING);
 					S_StartSound(NULL, sfx_s26d);
-				}
 				else
 				{
 					switch (dirmenu[dir_on[menudepthleft]][DIR_TYPE])
@@ -5269,7 +5266,6 @@ static void M_HandleAddons(INT32 choice)
 							COM_BufAddText(va("addfile \"%s%s\"", menupath, dirmenu[dir_on[menudepthleft]]+DIR_STRING));
 							break;
 						default:
-							M_StartMessage(va("%c%s\x80\nI dislike you.\n\n(Press a key)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), M_AddonsHeaderPath()),NULL,MM_NOTHING);
 							S_StartSound(NULL, sfx_s26d);
 					}
 				}
@@ -5283,8 +5279,12 @@ static void M_HandleAddons(INT32 choice)
 			break;
 		case KEY_LSHIFT:
 		case KEY_RSHIFT:
-			autoloadmod = true;
-			M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
+			if (!dirmenu[dir_on[menudepthleft]])
+			{
+				autoloadmod = true;
+				S_StartSound(NULL, sfx_s26d);
+				M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
+			}
 			break;
 		default:
 			break;
