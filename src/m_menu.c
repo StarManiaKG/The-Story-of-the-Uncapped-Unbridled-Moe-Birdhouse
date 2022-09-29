@@ -497,12 +497,11 @@ static consvar_t cv_dummystaff = {"dummystaff", "0", CV_HIDEN|CV_CALL, dummystaf
 static menuitem_t MainMenu[] =
 {
 	{IT_SUBMENU|IT_STRING, NULL, "Extras",      &SR_MainDef,        76},
-	//{IT_CALL   |IT_STRING, NULL, "1 Player",    M_SinglePlayerMenu, 84},
-	{IT_CALL   |IT_STRING, NULL, "Time Attack", M_TimeAttack,       84},
+	{IT_CALL   |IT_STRING, NULL, "Single Player/Time Attack", M_TimeAttack,       84},
 	{IT_SUBMENU|IT_STRING, NULL, "Multiplayer", &MP_MainDef,        92},
 	{IT_CALL   |IT_STRING, NULL, "Options",     M_Options,          100},
 	{IT_CALL   |IT_STRING, NULL, "Addons",      M_Addons,           108},
-	{IT_CALL   |IT_STRING, NULL, "Quit  Game",  M_QuitSRB2,         116},
+	{IT_CALL   |IT_STRING, NULL, "Quit Game",  M_QuitSRB2,         116},
 };
 
 typedef enum
@@ -5103,6 +5102,7 @@ static void M_AddonExec(INT32 ch)
 	if (ch != 'y' && ch != KEY_ENTER)
 		return;
 
+	CONS_Printf(M_GetText("sonic"))
 	S_StartSound(NULL, sfx_zoom);
 	COM_BufAddText(va("exec \"%s%s\"", menupath, dirmenu[dir_on[menudepthleft]]+DIR_STRING));
 }
