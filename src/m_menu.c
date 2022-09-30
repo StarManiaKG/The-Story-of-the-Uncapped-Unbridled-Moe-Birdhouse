@@ -5111,7 +5111,7 @@ static void M_AddonExec(INT32 ch)
 boolean autoloadthemod = false;
 static void M_AddonAutoLoad(INT32 ch)
 {	
-	if (ch != 'y' && ch != KEY_LSHIFT && ch != KEY_RSHIFT && ch != KEY_ENTER && ch != KEY_ESCAPE && ch != 'n')
+	if (ch == 'y' && ch == KEY_LSHIFT && ch == KEY_RSHIFT && ch == KEY_ENTER && ch == KEY_ESCAPE && ch == 'n')
 	{
 		if (ch != 'y' && ch != KEY_LSHIFT && ch != KEY_ENTER)
 			S_StartSound(NULL, sfx_zoom);
