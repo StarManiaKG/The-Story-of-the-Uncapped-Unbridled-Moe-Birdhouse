@@ -5315,7 +5315,7 @@ static void M_HandleAddons(INT32 choice)
 				int filecount;
 				char *filetoautoload[MAX];
 				char *file = (char *)malloc(MAX * sizeof(char));
-				char *file_line[MAX];
+				char *file_line;
 
 				/*
 				INT32 filenum = netbuffer->u.filetxpak.fileid;
