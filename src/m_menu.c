@@ -5168,6 +5168,7 @@ static void M_HandleAddons(INT32 choice)
 {
 	boolean autoloadmod = false; // autoload a mod on game startup, like the .kart files
 	boolean exitmenu = false; // exit to previous menu
+	boolean refresh = true; // refresh the addons menu
 
 	if (M_ChangeStringAddons(choice))
 	{
@@ -5215,7 +5216,6 @@ static void M_HandleAddons(INT32 choice)
 			break;
 		case KEY_ENTER:
 			{
-				boolean refresh = true;
 				if (!dirmenu[dir_on[menudepthleft]])
 					S_StartSound(NULL, sfx_s26d);
 				else
@@ -5314,8 +5314,6 @@ static void M_HandleAddons(INT32 choice)
 				char *filetoautoload[256];
 				char *file = (char *)malloc(256 * sizeof(char));
 				char *file_line;
-
-				boolean refresh = true;
 
 				/*
 				INT32 filenum = netbuffer->u.filetxpak.fileid;
