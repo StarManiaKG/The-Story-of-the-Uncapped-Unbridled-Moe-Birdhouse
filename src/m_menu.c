@@ -5416,7 +5416,7 @@ static void M_HandleAddons(INT32 choice)
 							if (autoloadthemod)
 							{
 								int filecount;
-								char *filetoautoload[MAX];
+								char *filetoautoload[FILETOAUTOLOAD_MAX];
 								char *file = (char *)malloc(MAX * sizeof(char));
 								char *file_line;
 
