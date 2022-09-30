@@ -5303,7 +5303,6 @@ static void M_HandleAddons(INT32 choice)
 				//UINT8 **cp;
 				//INT32 AUTOLOADEDFILES;
 
-				//char filename[256];
 				//filestatus_t ncs = FS_NOTCHECKED;
 
 				//READSTRINGN(*cp, filename, 255);
@@ -5343,7 +5342,7 @@ static void M_HandleAddons(INT32 choice)
 					
 					if (autoloadthemod)
 					{
-						if (filecount < FILENAME_MAX)
+						if (filecount < 256)
 						{
 							if (filetoautoload[filecount] == NULL)
 								filetoautoload[filecount] = (char *)malloc(256 * sizeof(char));
@@ -5356,7 +5355,7 @@ static void M_HandleAddons(INT32 choice)
 
 							Z_Free(file);
 						}
-						else if (filecount > 256)
+						else
 							I_Error(M_GetText("sonic lol"));
 					}
 				}
@@ -5434,7 +5433,7 @@ static void M_HandleAddons(INT32 choice)
 								
 								if (autoloadthemod)
 								{
-									if (filecount < FILENAME_MAX)
+									if (filecount < 256)
 									{
 										if (filetoautoload[filecount] == NULL)
 											filetoautoload[filecount] = (char *)malloc(256 * sizeof(char));
@@ -5447,7 +5446,7 @@ static void M_HandleAddons(INT32 choice)
 
 										Z_Free(file);
 									}
-									else if (filecount > 256)
+									else
 										I_Error(M_GetText("sonic lol"));
 								}
 							}
