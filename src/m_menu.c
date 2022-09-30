@@ -5310,6 +5310,11 @@ static void M_HandleAddons(INT32 choice)
 
 				//FIL_FileOK
 
+				int filecount;
+				char *filetoautoload[256];
+				char *file = (char *)malloc(256 * sizeof(char));
+				char *file_line;
+
 				boolean refresh = true;
 
 				/*
@@ -5336,11 +5341,27 @@ static void M_HandleAddons(INT32 choice)
 				if (!dirmenu[dir_on[menudepthleft]])
 				{
 					M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonAutoLoad,MM_YESNO);
+					dirmenu[dir_on[menudepthleft]]+EXT_LOADSTART;
 					
 					if (autoloadthemod)
 					{
-						autoloadmod = true;
-						autoloadthemod = false;
+						if (filecount < FILENAME_MAX)
+						{
+							if(filetoautoload[filecount] == NULL)
+							{
+								filetoautoload[filecount] = (char *)malloc(256 * sizeof(char));
+							}
+
+							strcpy(file, file_line);
+							filetoautoload[filecount] = file;
+
+							autoloadmod = true;
+							autoloadthemod = false;
+
+							Z_Free(file);
+						}
+						else if (filecount > 256)
+							I_Error(M_GetText("sonic lol"));
 					}
 				}
 				else
@@ -5411,32 +5432,30 @@ static void M_HandleAddons(INT32 choice)
 							COM_BufAddText(va("addfile \"%s%s\"", menupath, dirmenu[dir_on[menudepthleft]]+DIR_STRING));
 							break;
 						default:
-							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonAutoLoad,MM_YESNO);
-							dirmenu[dir_on[menudepthleft]]+EXT_LOADSTART;
-							if (autoloadthemod)
 							{
-								int filecount;
-								char *filetoautoload[256];
-								char *file = (char *)malloc(256 * sizeof(char));
-								char *file_line;
-
-								if (filecount < FILENAME_MAX)
-  								{
-									if(filetoautoload[filecount] == NULL)
+								M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonAutoLoad,MM_YESNO);
+								dirmenu[dir_on[menudepthleft]]+EXT_LOADSTART;
+								
+								if (autoloadthemod)
+								{
+									if (filecount < FILENAME_MAX)
 									{
-										filetoautoload[filecount] = (char *)malloc(256 * sizeof(char));
+										if(filetoautoload[filecount] == NULL)
+										{
+											filetoautoload[filecount] = (char *)malloc(256 * sizeof(char));
+										}
+
+										strcpy(file, file_line);
+										filetoautoload[filecount] = file;
+
+										autoloadmod = true;
+										autoloadthemod = false;
+
+										Z_Free(file);
 									}
-
-									strcpy(file, file_line);
-									filetoautoload[filecount] = file;
-
-									autoloadmod = true;
-									autoloadthemod = false;
-
-									Z_Free(file);
+									else if (filecount > 256)
+										I_Error(M_GetText("sonic lol"));
 								}
-								else if (filecount > 256)
-									I_Error(M_GetText("sonic lol"));
 							}
 						}
 					}
