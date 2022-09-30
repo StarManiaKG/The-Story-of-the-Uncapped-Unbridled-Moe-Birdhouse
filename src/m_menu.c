@@ -5417,7 +5417,7 @@ static void M_HandleAddons(INT32 choice)
 							{
 								int filecount;
 								char *filetoautoload[FILENAME_MAX];
-								char *file = (char *)malloc(MAX * sizeof(char));
+								char *file = (char *)malloc(FILENAME_MAX * sizeof(char));
 								char *file_line;
 
 								if (filecount < FILENAME_MAX)
