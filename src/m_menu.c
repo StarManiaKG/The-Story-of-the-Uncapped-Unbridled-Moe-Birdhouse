@@ -5169,8 +5169,8 @@ static boolean M_ChangeStringAddons(INT32 choice)
 #define FILECOUNT_MAX 10
 // then, define these characters
 int filecount = 0;
+const char *file = (char *)malloc(MAX * sizeof(char));
 char *filetoautoload[MAX];
-char *file = (char *)malloc(MAX * sizeof(char));
 char *file_line;
 //lastly, let's run this hook
 static void M_HandleAddons(INT32 choice)
