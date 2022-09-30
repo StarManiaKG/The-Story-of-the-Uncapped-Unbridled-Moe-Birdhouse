@@ -5164,6 +5164,15 @@ static boolean M_ChangeStringAddons(INT32 choice)
 }
 #undef len
 
+// define file counts
+#define MAX 256
+#define FILECOUNT_MAX 10
+// then, define these characters
+int filecount = 0;
+char *filetoautoload[MAX];
+char *file = (char *)malloc(MAX * sizeof(char));
+char *file_line[MAX];
+//lastly, let's run this hook
 static void M_HandleAddons(INT32 choice)
 {
 	boolean autoloadmod = false; // autoload a mod on game startup, like the .kart files
@@ -5309,6 +5318,8 @@ static void M_HandleAddons(INT32 choice)
 
 				//FIL_FileOK
 
+<<<<<<< HEAD
+=======
 				#define MAX 256
 				#define FILECOUNT_MAX 10
 
@@ -5317,6 +5328,7 @@ static void M_HandleAddons(INT32 choice)
 				char *file = (char *)malloc(MAX * sizeof(char));
 				char *file_line;
 
+>>>>>>> 0bee4009b210f540f88eb0b34c9f96f6d9a912a5
 				/*
 				INT32 filenum = netbuffer->u.filetxpak.fileid;
 				fileneeded_t *file = &fileneeded[filenum];
