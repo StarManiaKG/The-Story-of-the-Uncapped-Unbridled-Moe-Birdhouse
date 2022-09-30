@@ -5295,13 +5295,13 @@ static void M_HandleAddons(INT32 choice)
 		//Adds Files Marked to Auto-Load
 		case KEY_LSHIFT:
 			{
-				UINT8 **cp;
-				INT32 AUTOLOADEDFILES;
+				//UINT8 **cp;
+				//INT32 AUTOLOADEDFILES;
 
-				char filename[256];
-				filestatus_t ncs = FS_NOTCHECKED;
+				//char filename[256];
+				//filestatus_t ncs = FS_NOTCHECKED;
 
-				READSTRINGN(*cp, filename, 255);
+				//READSTRINGN(*cp, filename, 255);
 
 				//FIL_FileOK
 
