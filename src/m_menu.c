@@ -5433,7 +5433,7 @@ static void M_HandleAddons(INT32 choice)
 							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonAutoLoad,MM_YESNO);
 							dirmenu[dir_on[menudepthleft]]+EXT_LOADSTART;
 								
-							if (autoloadthemod)sd
+							if (autoloadthemod)
 							{
 								if (filecount < FILECOUNT_MAX)
 								{
