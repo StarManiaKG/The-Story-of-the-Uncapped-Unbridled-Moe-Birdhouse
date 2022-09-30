@@ -4493,6 +4493,7 @@ menu_t MessageDef =
 	NULL
 };
 
+boolean iassumeitreturnedtrue = false; //Helps Do Automaking Things in the First Place
 
 void M_StartMessage(const char *string, void *routine,
 	menumessagetype_t itemtype)
@@ -4594,6 +4595,7 @@ void M_StartMessage(const char *string, void *routine,
 	//M_SetupNextMenu();
 	currentMenu = &MessageDef;
 	itemOn = 0;
+	iassumeitreturnedtrue = true;
 }
 
 #define MAXMSGLINELEN 256
@@ -5097,10 +5099,23 @@ static void M_DrawAddons(void)
 		V_DrawSmallScaledPatch(x, y + 4, 0, addonsp[NUM_EXT+2]);
 }
 
+boolean autoloadthemod = true;
+
 static void M_AddonExec(INT32 ch)
 {
-	if (ch != 'y' && ch != KEY_ENTER && (ch != KEY_LSHIFT || ch != KEY_RSHIFT))
-		return;
+	if (ch != 'n' && ch != KEY_ENTER && ch != KEY_LSHIFT && ch != KEY_RSHIFT && ch != KEY_ESCAPE && ch != 'y')
+	{
+		if (ch != 'y' && ch != KEY_ENTER && ch != KEY_LSHIFT)
+		{
+			autoloadthemod = false;
+			return;
+		}
+		else
+		{
+			autoloadthemod = true;
+			return;
+		}
+	}
 
 	S_StartSound(NULL, sfx_zoom);
 	COM_BufAddText(va("exec \"%s%s\"", menupath, dirmenu[dir_on[menudepthleft]]+DIR_STRING));
@@ -5153,10 +5168,7 @@ static void M_HandleAddons(INT32 choice)
 	{
 		char *tempname = NULL;
 		if (dirmenu && dirmenu[dir_on[menudepthleft]])
-		{
 			tempname = Z_StrDup(dirmenu[dir_on[menudepthleft]]+DIR_STRING); // don't need to I_Error if can't make - not important, just QoL
-			CONS_Printf(M_GetText(tempname));
-		}
 #if 0 // much slower
 		if (!preparefilemenu(true, false))
 		{
@@ -5319,9 +5331,14 @@ static void M_HandleAddons(INT32 choice)
 				if (!dirmenu[dir_on[menudepthleft]])
 				{
 					M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
-
-					autoloadmod = true;
-					S_StartSound(NULL, sfx_s26d);
+					
+					if (autoloadthemod)
+					{
+						autoloadmod = true;
+						S_StartSound(NULL, sfx_s26d);
+					}
+					else
+						S_StartSound(NULL, sfx_zoom);
 				}
 				else
 				{
@@ -5391,9 +5408,15 @@ static void M_HandleAddons(INT32 choice)
 							COM_BufAddText(va("addfile \"%s%s\"", menupath, dirmenu[dir_on[menudepthleft]]+DIR_STRING));
 							break;
 						default:
-							autoloadmod = true;
-							S_StartSound(NULL, sfx_s26d);
 							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
+
+							if (autoloadthemod)
+							{
+								autoloadmod = true;
+								S_StartSound(NULL, sfx_s26d);
+							}
+							else
+								S_StartSound(NULL, sfx_zoom);
 					}
 				}
 				if (refresh)
