@@ -5309,10 +5309,13 @@ static void M_HandleAddons(INT32 choice)
 
 				//FIL_FileOK
 
+				#define MAX 256
+				#define FILECOUNT_MAX 10
+
 				int filecount;
-				char *filetoautoload[256];
-				char *file = (char *)malloc(256 * sizeof(char));
-				char *file_line;
+				char *filetoautoload[MAX];
+				char *file = (char *)malloc(MAX * sizeof(char));
+				char *file_line[MAX];
 
 				/*
 				INT32 filenum = netbuffer->u.filetxpak.fileid;
@@ -5342,10 +5345,10 @@ static void M_HandleAddons(INT32 choice)
 					
 					if (autoloadthemod)
 					{
-						if (filecount < 256)
+						if (filecount < FILECOUNT_MAX)
 						{
 							if (filetoautoload[filecount] == NULL)
-								filetoautoload[filecount] = (char *)malloc(256 * sizeof(char));
+								filetoautoload[filecount] = (char *)malloc(MAX * sizeof(char));
 
 							strcpy(file, file_line);
 							filetoautoload[filecount] = file;
@@ -5430,12 +5433,12 @@ static void M_HandleAddons(INT32 choice)
 							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonAutoLoad,MM_YESNO);
 							dirmenu[dir_on[menudepthleft]]+EXT_LOADSTART;
 								
-							if (autoloadthemod)
+							if (autoloadthemod)sd
 							{
-								if (filecount < 256)
+								if (filecount < FILECOUNT_MAX)
 								{
 									if (filetoautoload[filecount] == NULL)
-										filetoautoload[filecount] = (char *)malloc(256 * sizeof(char));
+										filetoautoload[filecount] = (char *)malloc(MAX * sizeof(char));
 
 									strcpy(file, file_line);
 									filetoautoload[filecount] = file;
