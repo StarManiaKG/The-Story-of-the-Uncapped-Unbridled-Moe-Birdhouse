@@ -5424,7 +5424,7 @@ static void M_HandleAddons(INT32 choice)
   								{
 									if(filetoautoload[filecount] == NULL)
 									{
-										filetoautoload[filecount] = (char *)malloc(FILENAME+MAX * sizeof(char));
+										filetoautoload[filecount] = (char *)malloc(FILENAME_MAX * sizeof(char));
 									}
 
 									strcpy(file, file_line);
