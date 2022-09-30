@@ -5424,7 +5424,8 @@ static void M_HandleAddons(INT32 choice)
 			}
 			break;
 		//Removes Files Marked to Auto-Load
-		//case KEY_RSHIFT:
+		case KEY_RSHIFT:
+			M_StartMessage(va("%c%s\x80\nI Dislike You.\nGo Away :) \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),NULL,MM_YESNO); //M_AddonExec
 		default:
 			break;
 	}
