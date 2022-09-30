@@ -5416,11 +5416,11 @@ static void M_HandleAddons(INT32 choice)
 							if (autoloadthemod)
 							{
 								int filecount;
-								char *filetoautoload[FILETOAUTOLOAD_MAX];
+								char *filetoautoload[FILENAME_MAX];
 								char *file = (char *)malloc(MAX * sizeof(char));
 								char *file_line;
 
-								if (filecount < FILETOAUTOLOAD_MAX)
+								if (filecount < FILENAME_MAX)
   								{
 									if(filetoautoload[filecount] == NULL)
 									{
@@ -5435,7 +5435,7 @@ static void M_HandleAddons(INT32 choice)
 
 									Z_Free(file);
 								}
-								else if (filecount > FILETOAUTOLOAD_MAX)
+								else if (filecount > FILENAME_MAX)
 									I_Error(M_GetText("sonic lol"));
 							}
 						}
