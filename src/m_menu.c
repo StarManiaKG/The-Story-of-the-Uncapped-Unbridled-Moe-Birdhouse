@@ -5317,18 +5317,7 @@ static void M_HandleAddons(INT32 choice)
 				//READSTRINGN(*cp, filename, 255);
 
 				//FIL_FileOK
-
-<<<<<<< HEAD
-=======
-				#define MAX 256
-				#define FILECOUNT_MAX 10
-
-				int filecount;
-				char *filetoautoload[MAX];
-				char *file = (char *)malloc(MAX * sizeof(char));
-				char *file_line;
-
->>>>>>> 0bee4009b210f540f88eb0b34c9f96f6d9a912a5
+				
 				/*
 				INT32 filenum = netbuffer->u.filetxpak.fileid;
 				fileneeded_t *file = &fileneeded[filenum];
