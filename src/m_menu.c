@@ -5099,26 +5099,32 @@ static void M_DrawAddons(void)
 		V_DrawSmallScaledPatch(x, y + 4, 0, addonsp[NUM_EXT+2]);
 }
 
-boolean autoloadthemod = true;
-
 static void M_AddonExec(INT32 ch)
 {
-	if (ch != 'n' && ch != KEY_ENTER && ch != KEY_LSHIFT && ch != KEY_RSHIFT && ch != KEY_ESCAPE && ch != 'y')
+	if (ch != 'y' && ch != KEY_ENTER && ch != KEY_LSHIFT)
+		return;
+
+	S_StartSound(NULL, sfx_zoom);
+	COM_BufAddText(va("exec \"%s%s\"", menupath, dirmenu[dir_on[menudepthleft]]+DIR_STRING));
+}
+
+static void M_AddonAutoLoad(INT32 ch)
+{
+	boolean *autoloadthemod = false;
+	
+	if (ch != 'y' && ch != KEY_LSHIFT && ch != KEY_RSHIFT && ch != KEY_ENTER && ch != KEY_ESCAPE && ch != 'n')
 	{
-		if (ch != 'y' && ch != KEY_ENTER && ch != KEY_LSHIFT)
+		if (ch != 'y' && ch != KEY_LSHIFT && ch != KEY_ENTER)
 		{
 			autoloadthemod = false;
-			return;
+			S_StartSound(NULL, sfx_zoom);
 		}
 		else
 		{
 			autoloadthemod = true;
-			return;
+			S_StartSound(NULL, sfx_s26d);
 		}
 	}
-
-	S_StartSound(NULL, sfx_zoom);
-	COM_BufAddText(va("exec \"%s%s\"", menupath, dirmenu[dir_on[menudepthleft]]+DIR_STRING));
 }
 
 #define len menusearch[0]
@@ -5330,7 +5336,7 @@ static void M_HandleAddons(INT32 choice)
 
 				if (!dirmenu[dir_on[menudepthleft]])
 				{
-					M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
+					M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonAutoLoad,MM_YESNO);
 					
 					if (autoloadthemod)
 					{
@@ -5408,7 +5414,7 @@ static void M_HandleAddons(INT32 choice)
 							COM_BufAddText(va("addfile \"%s%s\"", menupath, dirmenu[dir_on[menudepthleft]]+DIR_STRING));
 							break;
 						default:
-							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonExec,MM_YESNO);
+							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonAutoLoad,MM_YESNO);
 
 							if (autoloadthemod)
 							{
