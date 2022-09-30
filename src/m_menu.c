@@ -5108,10 +5108,9 @@ static void M_AddonExec(INT32 ch)
 	COM_BufAddText(va("exec \"%s%s\"", menupath, dirmenu[dir_on[menudepthleft]]+DIR_STRING));
 }
 
+boolean autoloadthemod = false;
 static void M_AddonAutoLoad(INT32 ch)
-{
-	boolean *autoloadthemod = false;
-	
+{	
 	if (ch != 'y' && ch != KEY_LSHIFT && ch != KEY_RSHIFT && ch != KEY_ENTER && ch != KEY_ESCAPE && ch != 'n')
 	{
 		if (ch != 'y' && ch != KEY_LSHIFT && ch != KEY_ENTER)
