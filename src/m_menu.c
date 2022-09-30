@@ -5340,10 +5340,8 @@ static void M_HandleAddons(INT32 choice)
 					if (autoloadthemod)
 					{
 						autoloadmod = true;
-						S_StartSound(NULL, sfx_s26d);
+						autoloadthemod = false;
 					}
-					else
-						S_StartSound(NULL, sfx_zoom);
 				}
 				else
 				{
@@ -5414,14 +5412,33 @@ static void M_HandleAddons(INT32 choice)
 							break;
 						default:
 							M_StartMessage(va("%c%s\x80\nMark this Mod To Autoload on Startup?\nIf so, this Mod Will Bypass the Modified Game Checks. \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonAutoLoad,MM_YESNO);
-
+							dirmenu[dir_on[menudepthleft]]+EXT_LOADSTART
 							if (autoloadthemod)
 							{
-								autoloadmod = true;
-								S_StartSound(NULL, sfx_s26d);
+								int filecount;
+								char *filetoautoload[];
+								char *file = (char *)malloc(MAX * sizeof(char));
+								char *file_line;
+
+								if (filecount < FILETOAUTOLOAD_MAX)
+  								{
+									if(filetoautoload[filecount] == NULL)
+									{
+										filetoautoload[filecount] = (char *)malloc(MAX * sizeof(char));
+									}
+
+									strcpy(file, file_line);
+									filetoautoload[filecount] = file;
+
+									autoloadmod = true;
+									autoloadthemod = false;
+
+									Z_Free(file);
+								}
+								else if (filecount > FILETOAUTOLOAD_MAX)
+									I_Error(M_GetText("sonic lol"));
 							}
-							else
-								S_StartSound(NULL, sfx_zoom);
+						}
 					}
 				}
 				if (refresh)
@@ -5430,13 +5447,13 @@ static void M_HandleAddons(INT32 choice)
 			break;
 		//Removes Files Marked to Auto-Load
 		case KEY_RSHIFT:
-			M_StartMessage(va("%c%s\x80\nI Dislike You.\nGo Away :) \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),NULL,MM_YESNO); //M_AddonExec
+			M_StartMessage(va("%c%s\x80\nI Dislike You.\n :) \n\n(Press 'Y' to confirm)\n", ('\x80' + (highlightflags>>V_CHARCOLORSHIFT)), dirmenu[dir_on[menudepthleft]]+DIR_STRING),M_AddonAutoLoad,MM_YESNO);
 		default:
 			break;
 	}
 
 	if (autoloadmod)
-		S_StartSound(NULL, sfx_s26d);
+		CONS_Printf(M_GetText("Mod Autoloaded!"));
 
 	if (exitmenu)
 	{
