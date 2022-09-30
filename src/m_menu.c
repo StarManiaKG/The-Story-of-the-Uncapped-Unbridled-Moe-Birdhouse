@@ -5161,20 +5161,20 @@ static boolean M_ChangeStringAddons(INT32 choice)
 }
 #undef len
 
-// define file counts
+// define file things
 #define MAX 256
 #define FILECOUNT_MAX 10
-// then, define these characters
-int filecount = 0;
-char filetoautoload[MAX];
-char file = (char *)malloc(MAX * sizeof(char));
-char file_line;
-//lastly, let's run this hook
+char *filetoautoload[MAX];
 static void M_HandleAddons(INT32 choice)
 {
 	boolean autoloadmod = false; // autoload a mod on game startup, like the .kart files
 	boolean exitmenu = false; // exit to previous menu
 	boolean refresh = true; // refresh the addons menu
+
+	// then, define these characters
+	int filecount = 0;
+	char *file = (char *)malloc(MAX * sizeof(char));
+	char *file_line;
 
 	if (M_ChangeStringAddons(choice))
 	{
