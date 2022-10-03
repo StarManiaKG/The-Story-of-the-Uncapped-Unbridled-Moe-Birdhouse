@@ -5175,6 +5175,8 @@ static void P_NiGHTSMovement(player_t *player)
 		else // AngleFixed(R_PointToAngle2()) results in slight inaccuracy! Don't use it unless movement is on both axises.
 			newangle = (INT16)FixedInt(AngleFixed(R_PointToAngle2(0,0, cmd->sidemove*FRACUNIT, cmd->forwardmove*FRACUNIT)));
 
+		newangle -= player->viewrollangle / ANG1;
+
 		if (newangle < 0 && moved)
 			newangle = (INT16)(360+newangle);
 	}
@@ -7116,6 +7118,13 @@ consvar_t cv_cam4_speed = {"cam4_speed", "0.4", CV_FLOAT|CV_SAVE, CV_CamSpeed, N
 consvar_t cv_cam4_rotate = {"cam4_rotate", "0", CV_CALL|CV_NOINIT, CV_CamRotate, CV_CamRotate4_OnChange, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_cam4_rotspeed = {"cam4_rotspeed", "10", CV_SAVE, rotation_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 
+consvar_t cv_tilting = {"tilting", "On", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_quaketilt = {"quaketilt", "On", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_tiltsmoothing = {"tiltsmoothing", "32", CV_SAVE, CV_Natural, NULL, 0, NULL, NULL, 0, 0, NULL};
+
+consvar_t cv_actionmovie = {"actionmovie", "On", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_windowquake = {"windowquake", "Off", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL, 0, 0, NULL};
+
 fixed_t t_cam_dist = -42;
 fixed_t t_cam_height = -42;
 fixed_t t_cam_rotate = -42;
@@ -8230,6 +8239,112 @@ void P_DoTimeOver(player_t *player)
 		exitcountdown = 5*TICRATE;
 }
 
+	/* gaysed script from me, based on Golden's sprite slope roll */
+
+// holy SHIT
+static INT32
+Quaketilt (player_t *player)
+{
+	angle_t tilt;
+	fixed_t lowb; // this threshold for speed
+	angle_t moma = R_PointToAngle2(0, 0, player->mo->momx, player->mo->momy);
+	INT32 delta = (INT32)( player->mo->angle - moma );
+	fixed_t speed;
+
+	boolean sliptiding =
+		(
+				player->kartstuff[k_aizdriftstrat] != 0 &&
+				player->kartstuff[k_drift]         == 0
+		);
+
+	if (delta == (INT32)ANGLE_180)/* FUCK YOU HAVE A HACK */
+	{
+		return 0;
+	}
+
+	// Hi! I'm "not a math guy"!
+	if (abs(delta) > ANGLE_90)
+		delta = (INT32)(( moma + ANGLE_180 ) - player->mo->angle );
+	if (P_IsObjectOnGround(player->mo))
+	{
+		if (sliptiding)
+		{
+			tilt = ANGLE_45;
+			lowb = 5*FRACUNIT;
+		}
+		else
+		{
+			tilt = ANGLE_11hh/2;
+			lowb = 15*FRACUNIT;
+		}
+	}
+	else
+	{
+		tilt = ANGLE_22h;
+		lowb = 10*FRACUNIT;
+	}
+	moma = FixedMul(FixedDiv(delta, ANGLE_90), tilt);
+	speed = abs( player->mo->momx + player->mo->momy );
+	if (speed < lowb)
+	{
+		// ease out tilt as we slow...
+		moma = FixedMul(moma, FixedDiv(speed, lowb));
+	}
+	return moma;
+}
+
+static void
+DoABarrelRoll (player_t *player)
+{
+	angle_t slope;
+	angle_t delta;
+
+	if (player->mo->standingslope)
+	{
+		slope = player->mo->standingslope->real_zangle;
+	}
+	else
+	{
+		slope = 0;
+	}
+
+	if (abs((INT32)slope) > ANGLE_11hh)
+	{
+		delta = ( player->mo->angle - player->mo->standingslope->real_xydirection );
+		slope = -(FixedMul(FINESINE (delta>>ANGLETOFINESHIFT), slope));
+	}
+	else
+	{
+		slope = 0;
+	}
+
+	if (cv_quaketilt.value)
+	{
+		slope -= Quaketilt(player);
+	}
+
+	delta = (INT32)( slope - player->tilt )/ cv_tiltsmoothing.value;
+
+	if (delta)
+		player->tilt += delta;
+	else
+		player->tilt  = slope;
+
+	if (cv_tilting.value)
+	{
+		player->viewrollangle = player->tilt;
+
+		if (cv_actionmovie.value)
+		{
+			player->viewrollangle += quake.roll;
+		}
+	}
+	else
+	{
+		player->viewrollangle = 0;
+	}
+}
+
 //
 // P_PlayerThink
 //
@@ -8852,6 +8967,7 @@ void P_PlayerThink(player_t *player)
 #ifdef HAVE_BLUA
 	LUAh_PlayerThink(player);
 #endif
+	DoABarrelRoll(player);
 
 /*
 //	Colormap verification

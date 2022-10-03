@@ -110,6 +110,8 @@ int	snprintf(char *str, size_t n, const char *fmt, ...);
 
 // platform independant focus loss
 UINT8 window_notinfocus = false;
+INT32 window_x;
+INT32 window_y;
 
 //
 // DEMO LOOP
@@ -289,6 +291,9 @@ static void D_Display(void)
 
 		if (vid.recalc)
 			SCR_Recalc(); // NOTE! setsizeneeded is set by SCR_Recalc()
+
+		if (rendermode == render_soft && !splitscreen)
+			R_CheckViewMorph();
 
 		// change the view size if needed
 		if (setsizeneeded)
@@ -501,6 +506,9 @@ static void D_Display(void)
 
 			if (rendermode == render_soft)
 			{
+					if (!splitscreen)
+						R_ApplyViewMorph();
+
 				for (i = 0; i <= splitscreen; i++)
 				{
 					if (postimgtype[i])
