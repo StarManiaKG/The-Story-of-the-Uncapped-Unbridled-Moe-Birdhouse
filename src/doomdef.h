@@ -149,7 +149,7 @@ extern char  logfilename[1024];
 #else
 #define VERSION    1 // Game version
 #define SUBVERSION 4 // more precise version number
-#define VERSIONSTRING "Speccy Kart"
+#define VERSIONSTRING "Speccy Kart" //for those wanting to compile my build, you can change this to have a custom name, for example, speecy kart, or starmaniakg kart or something like that
 #define VERSIONSTRINGW L"v1.5"
 // Hey! If you change this, add 1 to the MODVERSION below! Otherwise we can't force updates!
 // And change CMakeLists.txt (not src/, but in root), for CMake users!
