@@ -158,6 +158,7 @@ char srb2path[256] = "/cd";
 char srb2home[256] = ".";
 char srb2path[256] = ".";
 #endif
+boolean autoloading = false;
 boolean usehome = true;
 const char *pandf = "%s" PATHSEP "%s";
 
@@ -793,6 +794,14 @@ void D_SRB2Loop(void)
 			Discord_RunCallbacks();
 		}
 #endif
+		
+		if (autoloading)
+		{
+			majormods = false;
+			savemoddata = false;
+			modifiedgame = false;
+			autoloading = false;
+		}
 
 		// Fully completed frame made.
 		finishprecise = I_GetPreciseTime();
@@ -912,9 +921,31 @@ static void D_AddFile(const char *file, char **filearray)
 	filearray[pnumwadfiles] = newfile;
 }
 
+//
+// D_AutoLoadAddons
+//
+static void D_AutoLoadAddons(const char *file, char **filearray)
+{
+	size_t pnumwadfiles; //allan please add context
+	char *newfile;
+
+	for (pnumwadfiles = 0; filearray[pnumwadfiles]; pnumwadfiles++)
+		;
+
+	newfile = malloc(strlen(file) + 1);
+	if (!newfile)
+		I_Error("No more free memory to Autoload %s", AUTOLOADFILENAME);
+
+	autoloading = true;
+	strcpy(newfile, file);
+
+	COM_ImmedExecute(va("exec %s", newfile));
+}
+
 static inline void D_CleanFile(char **filearray)
 {
 	size_t pnumwadfiles;
+
 	for (pnumwadfiles = 0; filearray[pnumwadfiles]; pnumwadfiles++)
 	{
 		free(filearray[pnumwadfiles]);
@@ -996,9 +1027,6 @@ static void IdentifyVersion(void)
 #ifdef USE_PATCH_KART
 	D_AddFile(va(pandf,srb2waddir,"patch.kart"), startupwadfiles);
 #endif
-	
-	//if (autoloadedmods)
-		//D_AddFile(va(pandf,srb2waddir,autoloadedmods), startupwadfiles);
 
 #if !defined (HAVE_SDL) || defined (HAVE_MIXER)
 #define MUSICTEST(str) \
@@ -1078,6 +1106,8 @@ void D_SRB2Main(void)
 	UINT16 wadnum;
 	char *name;
 
+	const char *autoloadpath = va("%s"PATHSEP"%s", srb2home, AUTOLOADFILENAME); //autoload wad feature
+
 	INT32 pstartmap = 1;
 	boolean autostart = false;
 
@@ -1114,7 +1144,6 @@ void D_SRB2Main(void)
 
 	// Test Dehacked lists
 	DEH_Check();
-
 	// identify the main IWAD file to use
 	IdentifyVersion();
 
@@ -1303,7 +1332,7 @@ void D_SRB2Main(void)
 	// Have to be done here before files are loaded
 	M_InitCharacterTables();
 
-	// load wad, including the main wad file
+// load wad, including the main wad file
 	CONS_Printf("W_InitMultipleFiles(): Adding IWAD and main PWADs.\n");
 	if (!W_InitMultipleFiles(startupwadfiles, false))
 #ifdef _DEBUG
@@ -1311,10 +1340,15 @@ void D_SRB2Main(void)
 #else
 		I_Error("A WAD file was not found or not valid.\nCheck the log to see which ones.\n");
 #endif
-	D_CleanFile(startupwadfiles);
+
+	if (!W_InitMultipleFiles(startuppwads, true))
+		CONS_Error("A PWAD file was not found or not valid.\nCheck the log to see which ones.\n");
+	
+	if (!FIL_ReadFileOK(autoloadpath))
+		D_CleanFile(startupwadfiles);
 
 	mainwads = 0;
-
+		
 #ifndef DEVELOP
 	// Check MD5s of autoloaded files
 	// Note: Do not add any files that ignore MD5!
@@ -1343,66 +1377,6 @@ void D_SRB2Main(void)
 
 #endif //ifndef DEVELOP
 
-	//
-	// search for maps
-	//
-	for (wadnum = 4; wadnum < 6; wadnum++) // fucking arbitrary numbers
-	{
-		lumpinfo = wadfiles[wadnum]->lumpinfo;
-		for (i = 0; i < wadfiles[wadnum]->numlumps; i++, lumpinfo++)
-		{
-			name = lumpinfo->name;
-
-			if (name[0] == 'M' && name[1] == 'A' && name[2] == 'P') // Ignore the headers
-			{
-				INT16 num;
-				if (name[5] != '\0')
-					continue;
-				num = (INT16)M_MapNumber(name[3], name[4]);
-
-				// we want to record whether this map exists. if it doesn't have a header, we can assume it's not relephant
-				if (num <= NUMMAPS && mapheaderinfo[num - 1])
-				{
-					mapheaderinfo[num - 1]->menuflags |= LF2_EXISTSHACK;
-				}
-			}
-		}
-	}
-
-	if (!W_InitMultipleFiles(startuppwads, true))
-		CONS_Error("A PWAD file was not found or not valid.\nCheck the log to see which ones.\n");
-	D_CleanFile(startuppwads);
-
-	//
-	// search for maps... again.
-	//
-	for (wadnum = mainwads+1; wadnum < numwadfiles; wadnum++)
-	{
-		lumpinfo = wadfiles[wadnum]->lumpinfo;
-		for (i = 0; i < wadfiles[wadnum]->numlumps; i++, lumpinfo++)
-		{
-			name = lumpinfo->name;
-
-			if (name[0] == 'M' && name[1] == 'A' && name[2] == 'P') // Ignore the headers
-			{
-				INT16 num;
-				if (name[5] != '\0')
-					continue;
-				num = (INT16)M_MapNumber(name[3], name[4]);
-
-				// we want to record whether this map exists. if it doesn't have a header, we can assume it's not relephant
-				if (num <= NUMMAPS && mapheaderinfo[num - 1])
-				{
-					if (mapheaderinfo[num - 1]->menuflags & LF2_EXISTSHACK)
-						G_SetGameModified(multiplayer, true); // oops, double-defined - no record attack privileges for you
-					mapheaderinfo[num - 1]->menuflags |= LF2_EXISTSHACK;
-				}
-
-				CONS_Printf("%s\n", name);
-			}
-		}
-	}
-
 	cht_Init();
 
 	//---------------------------------------------------- READY SCREEN
@@ -1428,6 +1402,74 @@ void D_SRB2Main(void)
 	HU_Init();
 
 	COM_Init();
+
+	if (FIL_ReadFileOK(autoloadpath))
+	{
+		CONS_Printf("D_AutoLoadAddons(): Autoloading Addons.\n");
+		D_AutoLoadAddons(va(pandf,srb2home,AUTOLOADFILENAME), startupwadfiles);
+		D_CleanFile(startupwadfiles);
+		mainwads++;
+	}
+
+	//
+	// search for maps
+	//
+	for (wadnum = 4; wadnum < 6; wadnum++) // fucking arbitrary numbers
+	{
+		lumpinfo = wadfiles[wadnum]->lumpinfo;
+		for (i = 0; i < wadfiles[wadnum]->numlumps; i++, lumpinfo++)
+		{
+			name = lumpinfo->name;
+
+			if (name[0] == 'M' && name[1] == 'A' && name[2] == 'P') // Ignore the headers
+			{
+				INT16 num;
+				if (name[5] != '\0')
+					continue;
+				num = (INT16)M_MapNumber(name[3], name[4]);
+
+				// we want to record whether this map exists. if it doesn't have a header, we can assume it's not relephant
+				if (num <= NUMMAPS && mapheaderinfo[num - 1])
+				{
+					mapheaderinfo[num - 1]->menuflags |= LF2_EXISTSHACK;
+				}
+			}
+		}
+	}
+	
+    //
+	// search for maps... again.
+	//
+	for (wadnum = mainwads+1; wadnum < numwadfiles; wadnum++)
+	{
+		lumpinfo = wadfiles[wadnum]->lumpinfo;
+		for (i = 0; i < wadfiles[wadnum]->numlumps; i++, lumpinfo++)
+		{
+			name = lumpinfo->name;
+
+			if (name[0] == 'M' && name[1] == 'A' && name[2] == 'P') // Ignore the headers
+			{
+				INT16 num;
+				if (name[5] != '\0')
+					continue;
+				num = (INT16)M_MapNumber(name[3], name[4]);
+
+				// we want to record whether this map exists. if it doesn't have a header, we can assume it's not relephant
+				if (num <= NUMMAPS && mapheaderinfo[num - 1])
+				{
+					if (mapheaderinfo[num - 1]->menuflags & LF2_EXISTSHACK)
+					{
+						autoloading = false;
+						G_SetGameModified(multiplayer, true); // oops, double-defined - no record attack privileges for you
+					}
+					mapheaderinfo[num - 1]->menuflags |= LF2_EXISTSHACK;
+				}
+
+				CONS_Printf("%s\n", name);
+			}
+		}
+	}
+    
 	// libogc has a CON_Init function, we must rename SRB2's CON_Init in WII/libogc
 #ifndef _WII
 	CON_Init();
@@ -1566,6 +1608,7 @@ void D_SRB2Main(void)
 	else
 		COM_ImmedExecute(va("exec \"%s"PATHSEP"kartexec.cfg\" -noerror\n", srb2home));
 
+    
 	if (!autostart)
 		M_PushSpecialParameters(); // push all "+" parameters at the command buffer
 
@@ -1710,6 +1753,7 @@ void D_SRB2Main(void)
 	{
 		DRPC_Init();
 	}
+
 #endif
 }
 

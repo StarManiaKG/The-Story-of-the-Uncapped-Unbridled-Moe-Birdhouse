@@ -58,6 +58,7 @@ void R_DelSpriteDefs(UINT16 wadnum);
 void R_AddSprites(sector_t *sec, INT32 lightlevel);
 void R_InitSprites(void);
 void R_ClearSprites(void);
+void R_ClipSprites(void);
 void R_DrawMasked(void);
 
 // -----------
@@ -189,6 +190,8 @@ typedef struct drawnode_s
 
 extern INT32 numskins;
 extern skin_t skins[MAXSKINS];
+extern INT32 skinstats[9][9][MAXSKINS];
+extern INT32 skinstatscount[9][9];
 
 boolean SetPlayerSkin(INT32 playernum,const char *skinname);
 void SetPlayerSkinByNum(INT32 playernum,INT32 skinnum); // Tails 03-16-2002

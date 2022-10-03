@@ -40,6 +40,7 @@
  * Last updated 2020 / 08 / 30 - Kart v1.3 - patch.kart
  * Last updated 2022 / 08 / 16 - Kart v1.4 - Main assets
  * Last updated 2022 / 08 / 19 - Kart v1.5 - gfx.kart
+ * Last updated 2022 / 10 / 03 - Kart v1.5 - autoload.cfg
  */
 
 // Base SRB2 hashes
@@ -58,4 +59,4 @@
 #endif
 
 #endif
-#endif
+#endif //config.h or something lol

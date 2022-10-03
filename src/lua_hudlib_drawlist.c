@@ -53,6 +53,7 @@ typedef struct drawitem_s {
 	INT32 num;
 	INT32 digits;
 	size_t stroffset; // offset into strbuf to get str
+	//const char *str;
 	UINT16 color;
 	UINT8 strength;
 	INT32 align;

@@ -1934,7 +1934,6 @@ static void CL_LoadReceivedSavegame(void)
 static void SendAskInfo(INT32 node)
 {
 	const tic_t asktime = I_GetTime();
-
 	netbuffer->packettype = PT_ASKINFO;
 	netbuffer->u.askinfo.version = VERSION;
 	netbuffer->u.askinfo.time = (tic_t)LONG(asktime);

@@ -24,6 +24,7 @@ extern tic_t rendergametic;
 
 extern char srb2home[256]; //Alam: My Home
 extern boolean usehome; //Alam: which path?
+extern boolean autoloading; //Star: My Autoloads
 extern const char *pandf; //Alam: how to path?
 extern char srb2path[256]; //Alam: SRB2's Home
 
