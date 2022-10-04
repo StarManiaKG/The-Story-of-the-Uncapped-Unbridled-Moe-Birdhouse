@@ -5437,10 +5437,7 @@ static void M_HandleAddons(INT32 choice)
 					refreshdirmenu |= REFRESHDIR_NORMAL;
 			}
 			break;
-
-		case KEY_ESCAPE:
-			exitmenu = true;
-			break;
+		
 		//Adds Files Marked to Auto-Load
 		case KEY_LSHIFT:
 			{
@@ -5505,6 +5502,10 @@ static void M_HandleAddons(INT32 choice)
 				if (refresh)
 					refreshdirmenu |= REFRESHDIR_NORMAL;
 			}
+			break;
+			
+		case KEY_ESCAPE:
+			exitmenu = true;
 			break;
 		//Removes Files Marked to Auto-Load
 		/*

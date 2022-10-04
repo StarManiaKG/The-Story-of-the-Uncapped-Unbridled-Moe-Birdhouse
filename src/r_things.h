@@ -197,7 +197,6 @@ boolean SetPlayerSkin(INT32 playernum,const char *skinname);
 void SetPlayerSkinByNum(INT32 playernum,INT32 skinnum); // Tails 03-16-2002
 INT32 R_SkinAvailable(const char *name);
 void R_AddSkins(UINT16 wadnum);
-
 #ifdef DELFILE
 void R_DelSkins(UINT16 wadnum);
 #endif

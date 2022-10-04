@@ -73,7 +73,7 @@ static void Got_ModifyVotecmd(UINT8 **cp, INT32 playernum);
 static void Got_PickVotecmd(UINT8 **cp, INT32 playernum);
 static void Got_RequestAddfilecmd(UINT8 **cp, INT32 playernum);
 #ifdef DELFILE
-static void Got_Delfilecmd(UINT8 **cp, INT32 playernum);
+static void Got_Deletefilecmd(UINT8 **cp, INT32 playernum);
 #endif
 static void Got_Addfilecmd(UINT8 **cp, INT32 playernum);
 static void Got_Pause(UINT8 **cp, INT32 playernum);
@@ -141,7 +141,7 @@ static void Command_SetViews_f(void);
 static void Command_Addfile(void);
 static void Command_ListWADS_f(void);
 #ifdef DELFILE
-static void Command_Delfile(void);
+static void Command_Deletefile(void);
 #endif
 static void Command_RunSOC(void);
 static void Command_Pause(void);
@@ -555,7 +555,7 @@ void D_RegisterServerCommands(void)
 	RegisterNetXCmd(XD_ADDFILE, Got_Addfilecmd);
 	RegisterNetXCmd(XD_REQADDFILE, Got_RequestAddfilecmd);
 #ifdef DELFILE
-	RegisterNetXCmd(XD_DELFILE, Got_Delfilecmd);
+	RegisterNetXCmd(XD_DELFILE, Got_Deletefilecmd);
 #endif
 	RegisterNetXCmd(XD_PAUSE, Got_Pause);
 	RegisterNetXCmd(XD_RESPAWN, Got_Respawn);
@@ -597,7 +597,7 @@ void D_RegisterServerCommands(void)
 	COM_AddCommand("listwad", Command_ListWADS_f);
 
 #ifdef DELFILE
-	COM_AddCommand("delfile", Command_Delfile);
+	COM_AddCommand("deletefile", Command_Deletefile);
 #endif
 	COM_AddCommand("runsoc", Command_RunSOC);
 	COM_AddCommand("pause", Command_Pause);
@@ -4314,15 +4314,19 @@ static void Command_Addfile(void)
 /** removes the last added pwad at runtime.
   * Searches for sounds, maps, music and images to remove
   */
-static void Command_Delfile(void)
+static void Command_Deletefile(void)
 {
+	char filename[241];
+
+	/*
 	if (gamestate == GS_LEVEL)
 	{
 		CONS_Printf(M_GetText("You must NOT be in a level to use this.\n"));
 		return;
 	}
+	*/
 
-	if (netgame && !(server || adminplayer == consoleplayer))
+	if (netgame && !(server || IsPlayerAdmin(consoleplayer)))
 	{
 		CONS_Printf(M_GetText("Only the server or a remote admin can use this.\n"));
 		return;
@@ -4336,9 +4340,10 @@ static void Command_Delfile(void)
 
 	if (!(netgame || multiplayer))
 	{
-		P_DelWadFile();
+		P_DeleteWadFile(filename);
 		if (mainwads == numwadfiles && modifiedgame)
 			modifiedgame = false;
+
 		return;
 	}
 
@@ -4414,33 +4419,6 @@ static void Got_RequestAddfilecmd(UINT8 **cp, INT32 playernum)
 	COM_BufAddText(va("addfile %s\n", filename));
 }
 
-#ifdef DELFILE
-static void Got_Delfilecmd(UINT8 **cp, INT32 playernum)
-{
-	if (playernum != serverplayer && playernum != adminplayer)
-	{
-		CONS_Alert(CONS_WARNING, M_GetText("Illegal delfile command received from %s\n"), player_names[playernum]);
-		if (server)
-		{
-			XBOXSTATIC UINT8 buf[2];
-
-			buf[0] = (UINT8)playernum;
-			buf[1] = KICK_MSG_CON_FAIL;
-			SendNetXCmd(XD_KICK, &buf, 2);
-		}
-		return;
-	}
-	(void)cp;
-
-	if (numwadfiles <= mainwads) //sanity
-		return;
-
-	P_DelWadFile();
-	if (mainwads == numwadfiles && modifiedgame)
-		modifiedgame = false;
-}
-#endif
-
 static void Got_Addfilecmd(UINT8 **cp, INT32 playernum)
 {
 	char filename[241];
@@ -4492,8 +4470,58 @@ static void Got_Addfilecmd(UINT8 **cp, INT32 playernum)
 		return;
 	}
 
-	G_SetGameModified(true, false);
+	if (!autoloading)
+		G_SetGameModified(true, false);
 }
+
+#ifdef DELFILE
+static void Got_Deletefilecmd(UINT8 **cp, INT32 playernum)
+{
+	char filename[241];
+	filestatus_t ncs = FS_NOTFOUND;
+	UINT8 md5sum[16];
+
+	(void)cp;
+
+	if (playernum != serverplayer)
+	{
+		CONS_Alert(CONS_WARNING, M_GetText("Illegal deletefile command received from %s\n"), player_names[playernum]);
+		if (server)
+		{
+			XBOXSTATIC UINT8 buf[2];
+
+			buf[0] = (UINT8)playernum;
+			buf[1] = KICK_MSG_CON_FAIL;
+			SendNetXCmd(XD_KICK, &buf, 2);
+		}
+		return;
+	}
+
+	ncs = findfile(filename,md5sum,true);
+
+	if (numwadfiles <= mainwads) //sanity
+		return;
+
+	if (ncs == FS_FOUND)
+	{
+		if (ncs == FS_OPEN)
+		{
+			P_DeleteWadFile(filename);
+			if (mainwads == numwadfiles && modifiedgame)
+			{
+				modifiedgame = false;
+				savemoddata = false;
+				majormods = false;
+			}
+		}
+		else
+		{
+			S_StartSound(NULL, sfx_s26d);
+			M_StartMessage(va("%s \nhasn't been loaded yet! \n\n(Press a key)\n",filename), NULL, MM_NOTHING);
+		}
+	}
+}			
+#endif
 
 static void Command_ListWADS_f(void)
 {

@@ -776,6 +776,14 @@ void D_SRB2Loop(void)
 			D_Display();
 		}
 
+		if (autoloading)
+		{
+			majormods = false;
+			savemoddata = false;
+			modifiedgame = false;
+			autoloading = false;
+		}
+
 		// Only take screenshots after drawing.
 		if (moviemode)
 			M_SaveFrame();
@@ -802,14 +810,6 @@ void D_SRB2Loop(void)
 			Discord_RunCallbacks();
 		}
 #endif
-		
-		if (autoloading)
-		{
-			majormods = false;
-			savemoddata = false;
-			modifiedgame = false;
-			autoloading = false;
-		}
 
 		// Fully completed frame made.
 		finishprecise = I_GetPreciseTime();

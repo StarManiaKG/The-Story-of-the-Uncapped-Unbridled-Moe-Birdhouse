@@ -203,7 +203,7 @@ static void P_ClearSingleMapHeaderInfo(INT16 i)
 	mapheaderinfo[num]->musinterfadeout = 0;
 	DEH_WriteUndoline("MUSICINTER", mapheaderinfo[num]->musintername, UNDO_NONE);
 	mapheaderinfo[num]->musintername[0] = '\0';
-	DEH_WriteUndoline("FORCECHARACTER", va("%d", mapheaderinfo[num]->forcecharacter), UNDO_NONE);
+	DEH_WriteUndoline("FORCECHARACTER", va("%s", mapheaderinfo[num]->forcecharacter), UNDO_NONE);
 	mapheaderinfo[num]->forcecharacter[0] = '\0';
 	DEH_WriteUndoline("WEATHER", va("%d", mapheaderinfo[num]->weather), UNDO_NONE);
 	mapheaderinfo[num]->weather = 0;
@@ -233,7 +233,7 @@ static void P_ClearSingleMapHeaderInfo(INT16 i)
 	mapheaderinfo[num]->encorepal = UINT16_MAX;
 	DEH_WriteUndoline("NUMLAPS", va("%u", mapheaderinfo[num]->numlaps), UNDO_NONE);
 	mapheaderinfo[num]->numlaps = NUMLAPS_DEFAULT;
-	DEH_WriteUndoline("UNLOCKABLE", va("%s", mapheaderinfo[num]->unlockrequired), UNDO_NONE);
+	DEH_WriteUndoline("UNLOCKABLE", va("%d", mapheaderinfo[num]->unlockrequired), UNDO_NONE);
 	mapheaderinfo[num]->unlockrequired = -1;
 	DEH_WriteUndoline("LEVELSELECT", va("%d", mapheaderinfo[num]->levelselect), UNDO_NONE);
 	mapheaderinfo[num]->levelselect = 0;
@@ -3592,12 +3592,16 @@ boolean P_AddWadFile(const char *wadfilename)
 }
 
 #ifdef DELFILE
-boolean P_DelWadFile(void)
+boolean P_DeleteWadFile(const char *wadfilename)
 {
 	sfxenum_t i;
+	UINT16 numlumps;
 	const UINT16 wadnum = (UINT16)(numwadfiles - 1);
 	const lumpnum_t lumpnum = numwadfiles<<16;
-	//lumpinfo_t *lumpinfo = wadfiles[wadnum]->lumpinfo;
+	const lumpinfo_t *lumpinfo = wadfiles[wadnum]->lumpinfo;
+	const char *name = lumpinfo->name;
+	boolean replacedcurrentmap = false;
+	
 	R_DelSkins(wadnum); // only used by DELFILE
 	R_DelSpriteDefs(wadnum); // only used by DELFILE
 	for (i = 0; i < NUMSFX; i++)
@@ -3615,6 +3619,47 @@ boolean P_DelWadFile(void)
 	}
 	W_UnloadWadFile(wadnum); // only used by DELFILE
 	R_LoadTextures();
-	return false;
+	
+	//reuseing thngs yay
+	for (i = 0; i < numlumps; i++, lumpinfo++)
+	{
+		if (name[0] == 'M' && name[1] == 'A' && name[2] == 'P') // Ignore the headers
+		{
+			INT16 num;
+			if (name[5]!='\0')
+				continue;
+			num = (INT16)M_MapNumber(name[3], name[4]);
+
+			// we want to record whether this map exists. if it doesn't have a header, we can assume it's not relephant
+			if (num <= NUMMAPS && mapheaderinfo[num-1])
+			{
+				if (mapheaderinfo[num-1]->menuflags & LF2_EXISTSHACK)
+					G_SetGameModified(multiplayer, true); // oops, double-defined - no record attack privileges for you
+				mapheaderinfo[num-1]->menuflags |= LF2_EXISTSHACK;
+			}
+
+			//If you replaced the map you're on, end the level when done.
+			if (num == gamemap)
+				replacedcurrentmap = true;
+		}
+	}
+
+	if (replacedcurrentmap && gamestate == GS_LEVEL)
+	{
+		if (netgame || multiplayer)
+		{
+			CONS_Printf(M_GetText("Current map %d replaced by added file, ending the level to ensure consistency.\n"), gamemap);
+			if (server)
+				SendNetXCmd(XD_EXITLEVEL, NULL, 0);
+		}
+		else
+			CONS_Printf(M_GetText("Current map %d replaced by added file, reload the map.\n"), gamemap);
+	}
+
+	CONS_Printf(M_GetText("Remvoed addon %s.\n"), wadfilename);
+	refreshdirmenu &= ~REFRESHDIR_GAMEDATA; // look at above void
+
+	return true;
+	//return false;
 }
 #endif

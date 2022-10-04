@@ -62,7 +62,7 @@ void P_LoadThingsOnly(void);
 boolean P_SetupLevel(boolean skipprecip);
 boolean P_AddWadFile(const char *wadfilename);
 #ifdef DELFILE
-boolean P_DelWadFile(void);
+boolean P_DeleteWadFile(const char *wadfilename);
 #endif
 boolean P_RunSOC(const char *socfilename);
 void P_WriteThings(lumpnum_t lump);

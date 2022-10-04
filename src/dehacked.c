@@ -1441,17 +1441,17 @@ static void readcutscenescene(MYFILE *f, INT32 num, INT32 scenenum)
 			}
 			else if (fastcmp(word, "FADEINID"))
 			{
-				DEH_WriteUndoline(word, va("%u", cutscenes[num]->scene[scenenum].fadenum), UNDO_NONE);
+				DEH_WriteUndoline(word, va("%u", cutscenes[num]->scene[scenenum].fadecolor), UNDO_NONE);
 				cutscenes[num]->scene[scenenum].fadeinid = (UINT8)i;
 			}
 			else if (fastcmp(word, "FADEOUTID"))
 			{
-				DEH_WriteUndoline(word, va("%u", cutscenes[num]->scene[scenenum].fadenum), UNDO_NONE);
+				DEH_WriteUndoline(word, va("%u", cutscenes[num]->scene[scenenum].fadecolor), UNDO_NONE);
 				cutscenes[num]->scene[scenenum].fadeoutid = (UINT8)i;
 			}
 			else if (fastcmp(word, "FADECOLOR"))
 			{
-				DEH_WriteUndoline(word, va("%u", cutscenes[num]->scene[scenenum].fadenum), UNDO_NONE);
+				DEH_WriteUndoline(word, va("%u", cutscenes[num]->scene[scenenum].fadecolor), UNDO_NONE);
 				cutscenes[num]->scene[scenenum].fadecolor = (UINT8)i;
 			}
 			else
@@ -3662,16 +3662,16 @@ static void DEH_LoadDehackedFile(MYFILE *f, UINT16 wad)
 void DEH_LoadDehackedLumpPwad(UINT16 wad, UINT16 lump)
 {
 	MYFILE f;
+	f.wad = wad;
 #ifdef DELFILE
 	unsocwad = wad;
 #endif
-	f.wad = wad;
-	f.size = W_LumpLengthPwad(wad, lump);
+	f.size = W_LumpLengthPwad(f.wad, lump);
 	f.data = Z_Malloc(f.size + 1, PU_STATIC, NULL);
 	W_ReadLumpPwad(wad, lump, f.data);
 	f.curpos = f.data;
 	f.data[f.size] = 0;
-	DEH_LoadDehackedFile(&f, wad);
+	DEH_LoadDehackedFile(&f, f.wad);
 	DEH_WriteUndoline(va("# uload for wad: %u, lump: %u", wad, lump), NULL, UNDO_DONE);
 	Z_Free(f.data);
 }
@@ -3735,7 +3735,7 @@ void DEH_UnloadDehackedWad(UINT16 wad)
 	f.curpos = f.data;
 	f.data[f.size] = 0;
 	disableundo = true;
-	DEH_LoadDehackedFile(&f);
+	DEH_LoadDehackedFile(&f, f.wad);
 	disableundo = false;
 	Z_Free(f.data);
 }

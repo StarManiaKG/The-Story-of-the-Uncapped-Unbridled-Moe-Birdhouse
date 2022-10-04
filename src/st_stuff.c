@@ -385,6 +385,18 @@ void ST_ReloadSkinFaceGraphics(void)
 		ST_LoadFaceGraphics(skins[i].facerank, skins[i].facewant, skins[i].facemmap, i);
 }
 
+#ifdef DELFILE
+void ST_UnLoadFaceGraphics(INT32 skinnum)
+{
+	char *rankstr;
+	char *wantstr;
+	char *mmapstr;
+	Z_FreeTags(rankstr, rankstr);
+	Z_FreeTags(wantstr, wantstr);
+	Z_FreeTags(mmapstr, mmapstr);
+}
+#endif
+
 static inline void ST_InitData(void)
 {
 	// 'link' the statusbar display to a player, which could be
