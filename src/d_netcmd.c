@@ -1035,6 +1035,22 @@ void D_RegisterClientCommands(void)
 	CV_RegisterVar(&cv_discordrp);
 	CV_RegisterVar(&cv_discordstreamer);
 	CV_RegisterVar(&cv_discordasks);
+	CV_RegisterVar(&cv_discordshowonstatus);
+	CV_RegisterVar(&cv_discordstatusmemes);
+	CV_RegisterVar(&cv_discordcharacterimagetype);
+	// Custom Things //
+	CV_RegisterVar(&cv_customdiscorddetails);
+	CV_RegisterVar(&cv_customdiscordstate);
+	CV_RegisterVar(&cv_customdiscordlargeimagetype);
+    CV_RegisterVar(&cv_customdiscordsmallimagetype);
+	CV_RegisterVar(&cv_customdiscordlargecharacterimage);
+	CV_RegisterVar(&cv_customdiscordsmallcharacterimage);
+    CV_RegisterVar(&cv_customdiscordlargemapimage);
+    CV_RegisterVar(&cv_customdiscordsmallmapimage);
+    CV_RegisterVar(&cv_customdiscordlargemiscimage);
+    CV_RegisterVar(&cv_customdiscordsmallmiscimage);
+    CV_RegisterVar(&cv_customdiscordlargeimagetext);
+    CV_RegisterVar(&cv_customdiscordsmallimagetext);
 #endif
 }
 
@@ -5824,7 +5840,7 @@ void Got_DiscordInfo(UINT8 **p, INT32 playernum)
 #ifdef HAVE_DISCORDRPC
 	discordInfo.maxPlayers = READUINT8(*p);
 	discordInfo.joinsAllowed = (boolean)READUINT8(*p);
-	discordInfo.everyoneCanInvite = (boolean)READUINT8(*p);
+	discordInfo.whoCanInvite = (boolean)READUINT8(*p);
 
 	DRPC_UpdatePresence();
 #else

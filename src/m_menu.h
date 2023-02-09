@@ -260,6 +260,11 @@ void Screenshot_option_Onchange(void);
 // Addons menu updating
 void Addons_option_Onchange(void);
 
+// Discord menu updating
+#ifdef HAVE_DISCORDRPC
+void Discord_option_Onchange(void);
+#endif
+
 void M_ReplayHut(INT32 choice);
 void M_SetPlaybackMenuPointer(void);
 
@@ -268,6 +273,17 @@ void M_RefreshPauseMenu(void);
 INT32 HU_GetHighlightColor(void);
 
 void M_PopupMasterServerRules(void);
+
+#ifdef HAVE_DISCORDRPC
+extern char customSImageString[2+10+17+3]; //Pointer for the name of the custom small image the player is using
+extern char customLImageString[3+17+10+2]; //Pointer for the name of the custom large image the player is using
+#endif
+
+//star stuff weeeeee
+extern boolean jukeboxMusicPlaying;
+extern char jukeboxMusicName[32+20+12];
+extern char jukeboxMusicTrack[7];
+void M_ResetJukebox(void);
 
 // These defines make it a little easier to make menus
 #define DEFAULTMENUSTYLE(header, source, prev, x, y)\
