@@ -1722,19 +1722,19 @@ static menuitem_t OP_Tsourdt3rdOptionsMenu[] =
 	{IT_STRING | IT_CVAR,    NULL, "Show Connecting Players",   &cv_noticedownload,        34},
 
 	{IT_HEADER, 			 NULL, 	"Miscellanious Options",    NULL,					   49},
-	{IT_STRING | IT_CALL, 	 NULL, 	"Jukebox",					M_Tsourdt3rdJukebox,   	   55},
+	{IT_STRING | IT_CALL, 	 NULL, 	"Jukebox",					NULL,   	   			   55},
 };
-static menuitem_t OP_Tsourdt3rdJukeboxMenu[] =
-{
-	{IT_KEYHANDLER | IT_STRING, 	 NULL, "", M_HandleTsourdt3rdJukebox, 0},
-};
+//static menuitem_t OP_Tsourdt3rdJukeboxMenu[] =
+//{
+//	{IT_KEYHANDLER | IT_STRING, 	 NULL, "", M_HandleTsourdt3rdJukebox, 0},
+//};
 
 enum
 {
-	op_extraserveroptions = 1,
+	op_extraserveroptions = 0,
 	op_noticedownload,
 
-	op_miscoptions = 3,
+	op_miscoptions = 2,
 	op_jukebox,
 };
 
@@ -2236,7 +2236,7 @@ menu_t OP_OpenGLColorDef =
 
 //star stuff lol
 menu_t OP_Tsourdt3rdOptionsDef = DEFAULTMENUSTYLE(NULL, OP_Tsourdt3rdOptionsMenu, &OP_MainDef, 30, 30); //M_TSOURDT3RD
-menu_t OP_Tsourdt3rdJukeboxDef =
+/*menu_t OP_Tsourdt3rdJukeboxDef =
 {
 	NULL,
 	sizeof (OP_Tsourdt3rdJukeboxMenu)/sizeof (menuitem_t),
@@ -2246,7 +2246,7 @@ menu_t OP_Tsourdt3rdJukeboxDef =
 	60, 150,
 	0,
 	NULL
-};
+};*/
 
 menu_t OP_DataOptionsDef = DEFAULTMENUSTYLE("M_DATA", OP_DataOptionsMenu, &OP_MainDef, 60, 30);
 menu_t OP_ScreenshotOptionsDef = DEFAULTMENUSTYLE("M_SCSHOT", OP_ScreenshotOptionsMenu, &OP_DataOptionsDef, 30, 30);
@@ -7010,11 +7010,7 @@ static void M_Options(INT32 choice)
 
 	OP_MainMenu[8].status = (Playing()) ? (IT_GRAYEDOUT) : (IT_STRING|IT_CALL); // Play credits
 
-#ifdef HAVE_DISCORDRPC
-	OP_DataOptionsMenu[4].status = (Playing()) ? (IT_GRAYEDOUT) : (IT_STRING|IT_SUBMENU); // Erase data
-#else
 	OP_DataOptionsMenu[3].status = (Playing()) ? (IT_GRAYEDOUT) : (IT_STRING|IT_SUBMENU); // Erase data
-#endif
 
 	OP_GameOptionsMenu[3].status =
 		(M_SecretUnlocked(SECRET_ENCORE)) ? (IT_CVAR|IT_STRING) : IT_SECRET; // cv_kartencore
@@ -12668,16 +12664,16 @@ static void M_Tsourdt3rdOptions(INT32 choice)
 		
 		if ((unlockables[i].unlocked && unlockables[i].type == SECRET_SOUNDTEST) || (modifiedgame && !savemoddata)) // for fairness sake
 		{
-			OP_Tsourdt3rdOptionsMenu[op_jukebox].status = IT_STRING|IT_CALL;
-			OP_Tsourdt3rdOptionsMenu[op_jukebox].itemaction = M_Tsourdt3rdJukebox;
+			//OP_Tsourdt3rdOptionsMenu[op_jukebox].status = IT_STRING|IT_CALL;
+			//OP_Tsourdt3rdOptionsMenu[op_jukebox].itemaction = M_Tsourdt3rdJukebox;
 			break;
 		}
 	}
 	M_SetupNextMenu(&OP_Tsourdt3rdOptionsDef);
 }
-
+/*
 static musicdef_t *curplaying = NULL;
-static INT32 st_sel = 0, st_cc = 0;
+static INT32 st_sel = 0;
 static fixed_t st_time = 0;
 static patch_t* st_radio[9];
 static patch_t* st_launchpad[4];
@@ -12708,7 +12704,7 @@ boolean S_PrepareJukeboxMusic(void)
 	if (!(soundtestdefs = Z_Malloc(numsoundtestdefs*sizeof(musicdef_t *), PU_STATIC, NULL)))
 		I_Error("S_PrepareJukeboxMusic(): could not allocate soundtestdefs.");
 
-	for (def = musicdefstart; def /*&& i < numsoundtestdefs*/; def = def->next)
+	for (def = musicdefstart; def //&& i < numsoundtestdefs//; def = def->next)
 	{
 		if (!(def->soundtestpage & soundtestpage))
 			continue;
@@ -13120,4 +13116,4 @@ void M_ResetJukebox(void)
 
 	for (INT32 i = 0; jukeboxMusicName[i] != '\0'; i++) jukeboxMusicName[i] = '\0';
 	for (INT32 i = 0; jukeboxMusicTrack[i] != '\0'; i++) jukeboxMusicTrack[i] = '\0';
-}
+}*/

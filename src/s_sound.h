@@ -137,17 +137,6 @@ typedef struct musicdef_s
 	//char usage[256];
 	char source[256];
 
-	char title[32];
-	char alttitle[64];
-	char authors[256];
-
-	UINT8 soundtestpage;
-	INT16 soundtestcond; // +ve for map, -ve for conditionset, 0 for already here
-	tic_t stoppingtics;
-	fixed_t bpm;
-	UINT32 loop_ms;/* override LOOPPOINT/LOOPMS */
-	boolean allowed; // question marks or listenable on sound test?
-
 	struct musicdef_s *next;
 } musicdef_t;
 
@@ -158,17 +147,6 @@ extern struct cursongcredit
 	fixed_t x;
 	UINT8 trans;
 } cursongcredit;
-
-extern musicdef_t soundtestsfx;
-extern musicdef_t *musicdefstart;
-extern musicdef_t **soundtestdefs;
-extern INT32 numsoundtestdefs;
-extern UINT8 soundtestpage;
-
-void S_LoadMusicDefs(UINT16 wadnum);
-void S_InitMusicDefs(void);
-
-boolean S_PrepareSoundTest(void);
 
 extern musicdef_t *musicdefstart;
 

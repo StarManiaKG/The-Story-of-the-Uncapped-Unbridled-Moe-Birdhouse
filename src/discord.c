@@ -25,6 +25,7 @@
 #include "r_things.h" // skins
 #include "mserv.h" // cv_advertise and ms_RoomID
 #include "m_cond.h" // queries about emblems
+#include "p_local.h" // stplyr
 #include "z_zone.h"
 #include "byteptr.h"
 #include "stun.h"
@@ -741,22 +742,22 @@ void DRPC_UpdatePresence(void)
 				// Spectators //
 				if (!players[consoleplayer].spectator)
 				{
-					snprintf(spectatorGrammar, 4, (((displayplayers != consoleplayer) || (cv_discordstatusmemes.value && (displayplayers != consoleplayer))) ? "ing" : "er"));
+					snprintf(spectatorGrammar, 4, (((displayplayers[stplyr-players] != consoleplayer) || (cv_discordstatusmemes.value && (displayplayers[stplyr-players] != consoleplayer))) ? "ing" : "er"));
 					snprintf(spectatorType, 21, "View%s", spectatorGrammar);
 				}
 				else
 				{
 					snprintf(lifeGrammar, 12, ", Dead; ");
-					snprintf(spectatorGrammar, 4, (((displayplayers != consoleplayer) || (cv_discordstatusmemes.value && (displayplayers == consoleplayer))) ? "ing" : "or"));
+					snprintf(spectatorGrammar, 4, (((displayplayers[stplyr-players] != consoleplayer) || (cv_discordstatusmemes.value && (displayplayers[stplyr-players] == consoleplayer))) ? "ing" : "or"));
 					snprintf(spectatorType, 21, "Spectat%s", spectatorGrammar);
 					
-					if (displayplayers == consoleplayer)
+					if (displayplayers[stplyr-players] == consoleplayer)
 						snprintf(lifeType, 27, (!cv_discordstatusmemes.value ? "In %s Mode" : "%s Air"), spectatorType);
 				}
 				
 				// Viewpoints //
-				if (displayplayers != consoleplayer)
-					snprintf(lifeType, 30, "%s %s", spectatorType, player_names[displayplayers]);
+				if (displayplayers[stplyr-players] != consoleplayer)
+					snprintf(lifeType, 30, "%s %s", spectatorType, player_names[stplyr-players]);
 			}
 
 			//// Statuses That Appear Whenever ////
