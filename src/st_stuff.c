@@ -1979,12 +1979,10 @@ static void ST_overlayDrawer(void)
 	{
 		if (renderisnewtic)
 		{
-			LUA_HUD_ClearDrawList(luahuddrawlist_game);
 			LUAh_GameHUD(stplyr, luahuddrawlist_game);
 		}
-		LUA_HUD_DrawList(luahuddrawlist_game);
 	}
-#endif
+#endif // HAVE_BLUA
 
 	// draw level title Tails
 	if (*mapheaderinfo[gamemap-1]->lvlttl != '\0' && !(hu_showscores && (netgame || multiplayer) && !mapreset)
@@ -2178,12 +2176,22 @@ void ST_Drawer(void)
 
 	if (st_overlay)
 	{
+#ifdef HAVE_BLUA
+		if (renderisnewtic)
+		{
+			LUA_HUD_ClearDrawList(luahuddrawlist_game);
+		}
+#endif // HAVE_BLUA
 		// No deadview!
 		for (i = 0; i <= splitscreen; i++)
 		{
 			stplyr = &players[displayplayers[i]];
 			ST_overlayDrawer();
 		}
+
+#ifdef HAVE_BLUA
+		LUA_HUD_DrawList(luahuddrawlist_game);
+#endif // HAVE_BLUA
 
 		// draw Midnight Channel's overlay ontop
 		if (mapheaderinfo[gamemap-1]->typeoflevel & TOL_TV)	// Very specific Midnight Channel stuff.

@@ -58,7 +58,6 @@ void R_DelSpriteDefs(UINT16 wadnum);
 void R_AddSprites(sector_t *sec, INT32 lightlevel);
 void R_InitSprites(void);
 void R_ClearSprites(void);
-void R_ClipSprites(void);
 void R_DrawMasked(void);
 
 // -----------
