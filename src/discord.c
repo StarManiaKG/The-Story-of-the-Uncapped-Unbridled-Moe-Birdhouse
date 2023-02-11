@@ -108,10 +108,9 @@ static CV_PossibleValue_t custommapimage_cons_t[] = {{0, "MIN"}, {69, "MAX"}, {0
 static CV_PossibleValue_t custommiscimage_cons_t[] = { // Miscellanious //
 	{0, "Default"},
 	
-	/*
 	// Intro Stuff
 	{1, "Intro 1"},
-	{2, "Intro 2"},
+	/*{2, "Intro 2"},
 	{3, "Intro 3"},
 	{4, "Intro 4"},
 	{5, "Intro 5"},
