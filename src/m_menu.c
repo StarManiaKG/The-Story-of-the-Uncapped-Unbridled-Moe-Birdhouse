@@ -1472,42 +1472,42 @@ enum
 static menuitem_t OP_DiscordOptionsMenu[] =
 {
 	{IT_HEADER,							NULL, 	"Discord Rich Presence",		NULL,					 	  	        0},
-	{IT_STRING | IT_CVAR,				NULL, 		"Rich Presence",			&cv_discordrp,			 	  		    7},
-	{IT_STRING | IT_CVAR,				NULL, 		"Streamer Mode",			&cv_discordstreamer,	 	 		   12},
+	{IT_STRING | IT_CVAR,				NULL, 		"Rich Presence",			&cv_discordrp,			 	  		   10},
+	{IT_STRING | IT_CVAR,				NULL, 		"Streamer Mode",			&cv_discordstreamer,	 	 		   20},
 
-	{IT_HEADER,							NULL,	"Main Rich Presence Settings",	NULL,					 	 		   17},
-	{IT_STRING | IT_CVAR,				NULL, 		"Ask To Join",				&cv_discordasks,		 	 		   24},
-	{IT_STRING | IT_CVAR,				NULL,  "Ask to Join Permissions",		&cv_discordinvites,		 	 		   29},
+	{IT_HEADER,							NULL,	"Main Rich Presence Settings",	NULL,					 	 		   30},
+	{IT_STRING | IT_CVAR,				NULL, 		"Ask To Join",				&cv_discordasks,		 	 		   40},
+	{IT_STRING | IT_CVAR,				NULL,  "Ask to Join Permissions",		&cv_discordinvites,		 	 		   50},
 
-	{IT_STRING | IT_CVAR,				NULL, 		"Show on Status",			&cv_discordshowonstatus, 	 	       39},
+	{IT_STRING | IT_CVAR,				NULL, 		"Show on Status",			&cv_discordshowonstatus, 	 	       70},
 	
-	{IT_HEADER,							NULL,	"Misc. Rich Presence Settings",	NULL,					 	 		   44},
-	{IT_STRING | IT_CVAR,				NULL, 		"Memes on Status",			&cv_discordstatusmemes,	 	 		   51},
-	{IT_STRING | IT_CVAR,				NULL, 		"Skin Image Type",			&cv_discordcharacterimagetype,		   56},
+	{IT_HEADER,							NULL,	"Misc. Rich Presence Settings",	NULL,					 	 		   80},
+	{IT_STRING | IT_CVAR,				NULL, 		"Memes on Status",			&cv_discordstatusmemes,	 	 		   90},
+	{IT_STRING | IT_CVAR,				NULL, 		"Skin Image Type",			&cv_discordcharacterimagetype,		   100},
 
 	// Custom Things
-	{IT_HEADER,							NULL, "Custom Discord Status",			NULL,					 	 		   61},
-	{IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 		"Header",			        &cv_customdiscorddetails, 	 		   68},
-	{IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 		"State",			        &cv_customdiscordstate, 			   88},
+	{IT_HEADER,							NULL, "Custom Discord Status",			NULL,					 	 		  110},
+	{IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 		"Header",			        &cv_customdiscorddetails, 	 		  120},
+	{IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 		"State",			        &cv_customdiscordstate, 			  148},
 
-	{IT_STRING | IT_CVAR,		        NULL, 	"Large Image Type",				&cv_customdiscordlargeimagetype,      108},
-    {IT_STRING | IT_CVAR,		        NULL, 	"Small Image Type",				&cv_customdiscordsmallimagetype,      113},
+	{IT_STRING | IT_CVAR,		        NULL, 	"Large Image Type",				&cv_customdiscordlargeimagetype,      166},
+    {IT_STRING | IT_CVAR,		        NULL, 	"Small Image Type",				&cv_customdiscordsmallimagetype,      176},
 
 	// chars
-	{IT_STRING | IT_CVAR,		        NULL, 	"Large Image",					&cv_customdiscordlargecharacterimage, 118},
-	{IT_STRING | IT_CVAR,		        NULL, 	"Small Image",					&cv_customdiscordsmallcharacterimage, 123},
+	{IT_STRING | IT_CVAR,		        NULL, 	"Large Image",					&cv_customdiscordlargecharacterimage, 186},
+	{IT_STRING | IT_CVAR,		        NULL, 	"Small Image",					&cv_customdiscordsmallcharacterimage, 196},
 	// maps
-	{IT_STRING | IT_CVAR,		        NULL, 	"Large Image",					&cv_customdiscordlargemapimage,       118},
-    {IT_STRING | IT_CVAR,		        NULL, 	"Small Image",					&cv_customdiscordsmallmapimage,       123},
+	{IT_STRING | IT_CVAR,		        NULL, 	"Large Image",					&cv_customdiscordlargemapimage,       186},
+    {IT_STRING | IT_CVAR,		        NULL, 	"Small Image",					&cv_customdiscordsmallmapimage,       196},
 	// misc
-    {IT_STRING | IT_CVAR,		        NULL, 	"Large Image",					&cv_customdiscordlargemiscimage,      118},
-    {IT_STRING | IT_CVAR,		        NULL, 	"Small Image",					&cv_customdiscordsmallmiscimage,      123},
+    {IT_STRING | IT_CVAR,		        NULL, 	"Large Image",					&cv_customdiscordlargemiscimage,      186},
+    {IT_STRING | IT_CVAR,		        NULL, 	"Small Image",					&cv_customdiscordsmallmiscimage,      196},
 
-    {IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 	"Large Image Text",				&cv_customdiscordlargeimagetext,      128},
-    {IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 	"Small Image Text",				&cv_customdiscordsmallimagetext,      148},
+    {IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 	"Large Image Text",				&cv_customdiscordlargeimagetext,      206},
+    {IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 	"Small Image Text",				&cv_customdiscordsmallimagetext,      224},
 
     // Let's Output Our Stuff
-	{IT_STRING | IT_SUBMENU,			NULL, 		"Output",					&OP_CustomStatusOutputDef,	          183},
+	{IT_STRING | IT_SUBMENU,			NULL, 		"Output",					&OP_CustomStatusOutputDef,	          242},
 };
 
 static menuitem_t OP_CustomStatusOutputMenu[] =
@@ -1724,11 +1724,11 @@ static menuitem_t OP_MonitorToggleMenu[] =
 // STAR OPTIONS LETS GOOOOOOOOOOOOO
 static menuitem_t OP_Tsourdt3rdOptionsMenu[] =
 {
-	{IT_HEADER, 			NULL, 	"Extra Server Options", 	NULL,					   14},
-	{IT_STRING | IT_CVAR,    NULL, "Show Connecting Players",   &cv_noticedownload,        34},
+	{IT_HEADER, 			 NULL, 	"Extra Server Options", 	NULL,					    0},
+	{IT_STRING | IT_CVAR,    NULL, "Show Connecting Players",   &cv_noticedownload,        10},
 
-	{IT_HEADER, 			 NULL, 	"Miscellanious Options",    NULL,					   49},
-	{IT_STRING | IT_CALL, 	 NULL, 	"Jukebox",					NULL,   	   			   55},
+	{IT_HEADER, 			 NULL, 	"Miscellanious Options",    NULL,					   20},
+	{IT_STRING | IT_CALL, 	 NULL, 	"Jukebox",					NULL,   	   			   30},
 };
 //static menuitem_t OP_Tsourdt3rdJukeboxMenu[] =
 //{
@@ -2543,126 +2543,126 @@ void Discord_option_Onchange(void)
 	// Is Rich Presence Even On? //
 	// Main
 	OP_DiscordOptionsMenu[op_richpresenceheader].status =
-		(cv_discordrp.value == 1 ? IT_HEADER : IT_DISABLED);
+		(cv_discordrp.value ? IT_HEADER : IT_DISABLED);
 	
 	OP_DiscordOptionsMenu[op_discordasks].status =
-		(cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+		(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 	
 	OP_DiscordOptionsMenu[op_discordinvites].status =
-		(cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+		(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 	
 	// Misc.
 	OP_DiscordOptionsMenu[op_discordmiscoptionsheader].status =
-		(cv_discordrp.value == 1 ? IT_HEADER : IT_DISABLED);
+		(cv_discordrp.value ? IT_HEADER : IT_DISABLED);
 
 	OP_DiscordOptionsMenu[op_discordstatusmemes].status =
-		(cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+		(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 	
 	OP_DiscordOptionsMenu[op_discordshowonstatus].status =
-		(cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+		(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
 	// Custom Status
 	OP_DiscordOptionsMenu[op_discordcharacterimagetype].status =
-		(cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+		(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
 	OP_DiscordOptionsMenu[op_customstatusheader].status =
-		(cv_discordrp.value == 1 ? IT_HEADER : IT_DISABLED);
+		(cv_discordrp.value ? IT_HEADER : IT_DISABLED);
 
 	OP_DiscordOptionsMenu[op_customdiscorddetails].status =
-		(cv_discordrp.value == 1 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
+		(cv_discordrp.value ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 	
 	OP_DiscordOptionsMenu[op_customdiscordstate].status =
-		(cv_discordrp.value == 1 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
+		(cv_discordrp.value ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
     // Custom Images
 	OP_DiscordOptionsMenu[op_customdiscordlargeimagetype].status =
-    		(cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+    	(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
     OP_DiscordOptionsMenu[op_customdiscordsmallimagetype].status =
-    		(cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+    	(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
     OP_DiscordOptionsMenu[op_customdiscordlargecharacterimage].status =
-        	(cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+        (cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
     OP_DiscordOptionsMenu[op_customdiscordsmallcharacterimage].status =
-        	(cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+        (cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
     OP_DiscordOptionsMenu[op_customdiscordlargemapimage].status =
-            (cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+        (cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
     OP_DiscordOptionsMenu[op_customdiscordsmallmapimage].status =
-            (cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+        (cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
     OP_DiscordOptionsMenu[op_customdiscordlargemiscimage].status =
-            (cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+        (cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
     OP_DiscordOptionsMenu[op_customdiscordsmallmiscimage].status =
-            (cv_discordrp.value == 1 ? IT_CVAR|IT_STRING : IT_DISABLED);
+        (cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
     OP_DiscordOptionsMenu[op_customdiscordlargeimagetext].status =
-    		(cv_discordrp.value == 1 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
+    	(cv_discordrp.value ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
     OP_DiscordOptionsMenu[op_customdiscordsmallimagetext].status =
-            (cv_discordrp.value == 1 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
+        (cv_discordrp.value ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
     // Output Status
 	OP_DiscordOptionsMenu[op_customstatusoutputdef].status =
-		(cv_discordrp.value == 1 ? IT_STRING|IT_SUBMENU : IT_DISABLED);
+		(cv_discordrp.value ? IT_STRING|IT_SUBMENU : IT_DISABLED);
 
 	// Is Our Rich Presence On? //
 	if (cv_discordrp.value)
 	{	
 		// Misc. Settings
 		OP_DiscordOptionsMenu[op_discordinvites].status =
-			(cv_discordasks.value == 1 ? IT_CVAR|IT_STRING : IT_GRAYEDOUT);
+			(cv_discordasks.value ? IT_CVAR|IT_STRING : IT_GRAYEDOUT);
 		
 		// Custom Statuses
 		OP_DiscordOptionsMenu[op_customstatusheader].status =
-			(cv_discordshowonstatus.value == 8 ? IT_HEADER : IT_DISABLED);
+			(cv_discordshowonstatus.value == 7 ? IT_HEADER : IT_DISABLED);
 		
 		OP_DiscordOptionsMenu[op_customdiscorddetails].status =
-			(cv_discordshowonstatus.value == 8 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
+			(cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
 		OP_DiscordOptionsMenu[op_customdiscordstate].status =
-			(cv_discordshowonstatus.value == 8 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
+			(cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
         // Custom Images
 		OP_DiscordOptionsMenu[op_customdiscordlargeimagetype].status =
-            (cv_discordshowonstatus.value == 8 ? IT_CVAR|IT_STRING : IT_DISABLED);
+            (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
         OP_DiscordOptionsMenu[op_customdiscordsmallimagetype].status =
-            (cv_discordshowonstatus.value == 8 ? IT_CVAR|IT_STRING : IT_DISABLED);
+            (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
         OP_DiscordOptionsMenu[op_customdiscordlargecharacterimage].status =
-            (cv_discordshowonstatus.value == 8 ? IT_CVAR|IT_STRING : IT_DISABLED);
+            (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
         OP_DiscordOptionsMenu[op_customdiscordsmallcharacterimage].status =
-            (cv_discordshowonstatus.value == 8 ? IT_CVAR|IT_STRING : IT_DISABLED);
+            (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
         OP_DiscordOptionsMenu[op_customdiscordlargemapimage].status =
-            (cv_discordshowonstatus.value == 8 ? IT_CVAR|IT_STRING : IT_DISABLED);
+            (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
         OP_DiscordOptionsMenu[op_customdiscordsmallmapimage].status =
-            (cv_discordshowonstatus.value == 8 ? IT_CVAR|IT_STRING : IT_DISABLED);
+            (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
         OP_DiscordOptionsMenu[op_customdiscordlargemiscimage].status =
-            (cv_discordshowonstatus.value == 8 ? IT_CVAR|IT_STRING : IT_DISABLED);
+            (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
         OP_DiscordOptionsMenu[op_customdiscordsmallmiscimage].status =
-            (cv_discordshowonstatus.value == 8 ? IT_CVAR|IT_STRING : IT_DISABLED);
+            (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
         OP_DiscordOptionsMenu[op_customdiscordlargeimagetext].status =
-            (cv_discordshowonstatus.value == 8 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
+            (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
         OP_DiscordOptionsMenu[op_customdiscordsmallimagetext].status =
-            (cv_discordshowonstatus.value == 8 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
+            (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
         // Output Status
 		OP_DiscordOptionsMenu[op_customstatusoutputdef].status =
-			(cv_discordshowonstatus.value == 8 ? IT_STRING|IT_SUBMENU : IT_DISABLED);
+			(cv_discordshowonstatus.value == 7 ? IT_STRING|IT_SUBMENU : IT_DISABLED);
 
         // Do We Want Custom Discord Statuses? //
-        if (cv_discordshowonstatus.value == 8)
+        if (cv_discordshowonstatus.value == 7)
         {
             // What Image Type Do We Have?
             if ((!cv_customdiscordlargeimagetype.value || cv_customdiscordlargeimagetype.value) && (!cv_customdiscordsmallimagetype.value || cv_customdiscordsmallimagetype.value))
@@ -12613,9 +12613,18 @@ static boolean confirmAccept = false;
 
 static void M_DiscordOptions(INT32 choice)
 {
-	(void)choice;
 	Discord_option_Onchange();
 
+	if (choice == KEY_ESCAPE)
+	{
+		S_StartSound(NULL, sfx_s3kb2);
+
+		if (currentMenu->prevMenu)
+			M_SetupNextMenu(currentMenu->prevMenu);
+		else
+			M_ClearMenus(true);
+	}
+	
 	M_SetupNextMenu(&OP_DiscordOptionsDef);
 }
 
@@ -12774,9 +12783,7 @@ static void M_DrawDiscordRequests(void)
 
 //Star Stuff WEEEE
 static void M_Tsourdt3rdOptions(INT32 choice)
-{
-	(void)choice;
-	
+{	
 	if ((splitscreen && !netgame) || currentMenu == &MP_ServerDef)
 		OP_Tsourdt3rdOptionsMenu[op_noticedownload].status = IT_GRAYEDOUT; // Log connecting player
 	else
@@ -12794,6 +12801,17 @@ static void M_Tsourdt3rdOptions(INT32 choice)
 			break;
 		}
 	}
+
+	if (choice == KEY_ESCAPE)
+	{
+		S_StartSound(NULL, sfx_s3kb2);
+
+		if (currentMenu->prevMenu)
+			M_SetupNextMenu(currentMenu->prevMenu);
+		else
+			M_ClearMenus(true);
+	}
+	
 	M_SetupNextMenu(&OP_Tsourdt3rdOptionsDef);
 }
 /*

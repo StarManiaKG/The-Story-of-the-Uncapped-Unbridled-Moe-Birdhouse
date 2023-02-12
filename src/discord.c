@@ -31,11 +31,11 @@
 #include "stun.h"
 #include "i_tcp.h" // current_port
 #include "discord.h" // duh
-#include "doomdef.h"
 #include "w_wad.h" // numwadfiles
 #include "d_netfil.h" // nameonly
 #include "doomstat.h" // savemoddata
 #include "dehacked.h" // titlechanged
+#include "doomdef.h"
 
 // Please feel free to provide your own Discord app if you're making a new custom build :)
 #define DISCORD_APPID "503531144395096085"
@@ -161,8 +161,8 @@ consvar_t cv_customdiscordsmallmapimage = {"customdiscordsmallmapimage", "MAX", 
 consvar_t cv_customdiscordlargemiscimage = {"customdiscordlargemiscimage", "Default", CV_SAVE|CV_CALL, custommiscimage_cons_t, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_customdiscordsmallmiscimage = {"customdiscordsmallmiscimage", "Intro 1", CV_SAVE|CV_CALL, custommiscimage_cons_t, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
     // Captions //
-consvar_t cv_customdiscordlargeimagetext = {"customdiscordlargeimagetext", "My Favorite Character!", CV_SAVE|CV_CALL, NULL, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
-consvar_t cv_customdiscordsmallimagetext = {"customdiscordsmallimagetext", "My Other Favorite Character!", CV_SAVE|CV_CALL, NULL, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_customdiscordlargeimagetext = {"customdiscordlargeimagetext", "My Favorite Go-Kart!", CV_SAVE|CV_CALL, NULL, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_customdiscordsmallimagetext = {"customdiscordsmallimagetext", "My Other Favorite Go-Kart!", CV_SAVE|CV_CALL, NULL, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
 
 struct discordInfo_s discordInfo;
 
@@ -181,7 +181,6 @@ static char *DRPC_XORIPString(const char *input)
 {
 	const UINT8 xor[IP_SIZE] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21};
 	char *output = malloc(sizeof(char) * (IP_SIZE+1));
-	
 	UINT8 i;
 
 	for (i = 0; i < IP_SIZE; i++)
@@ -674,7 +673,7 @@ void DRPC_UpdatePresence(void)
 			if (!Playing())
 			{
 				discordPresence.largeImageKey = "misctitle";
-				discordPresence.largeImageText = (!cv_discordshowonstatus.value ? "Title Screen" : "Sonic Robo Blast 2");
+				discordPresence.largeImageText = (!cv_discordshowonstatus.value ? "Title Screen" : "Sonic Robo Blast 2 Kart");
 				snprintf((cv_discordshowonstatus.value == 6 ? detailstr : statestr), 25, ((!demo.playback && !demo.title) ? "Main Menu" : ((demo.playback && !demo.title) ? "Watching Replays" : ((demo.playback && demo.title) ? "Watching A Demo" : "???"))));
 			}
 			else if (((cv_discordshowonstatus.value == 1 || cv_discordshowonstatus.value == 5) && !Playing()) || (cv_discordshowonstatus.value != 1 && cv_discordshowonstatus.value != 5))
@@ -722,41 +721,44 @@ void DRPC_UpdatePresence(void)
 	//// Statuses ////
 	if (!cv_discordshowonstatus.value || cv_discordshowonstatus.value == 4)
 	{
-		if (((gamestate == GS_LEVEL || gamestate == GS_INTERMISSION) && Playing() && playeringame[consoleplayer]) || (paused || menuactive || jukeboxMusicPlaying))
+		if (((gamestate == GS_LEVEL || gamestate == GS_INTERMISSION || gamestate == GS_VOTING) && Playing() && playeringame[consoleplayer]) || (paused || menuactive || jukeboxMusicPlaying))
 		{
 			//// Statuses That Only Appear In-Game ////
 			if (Playing())
 			{
 				// Modes //
 				snprintf(gametypeGrammar, 20, (!ultimatemode ? "Playing " : "Taking on "));
-				if (modeattacking)
-					snprintf(gameType, 12, ((maptol != TOL_NIGHTS && maptol != TOL_XMAS) ? "Time Attack" : "NiGHTS Mode"));
-				else
-					snprintf(gameType, 24, (!splitscreen ? ((gametype == GT_COOP && !netgame) ? (!ultimatemode ? "Single-Player" : "Ultimate Mode") : "%s") : "Split-Screen"), (netgame ? gametype_cons_t[gametype].strvalue : NULL));
+				snprintf(gameType, 24, ((modeattacking) ? "Time Attack" : "%s%s%s"), ((modeattacking) ? NULL : 
+																						(gametype_cons_t[gametype].strvalue, 
+																						((gametype == GT_RACE) ? va(" | %s", kartspeed_cons_t[gamespeed].strvalue) : NULL),
+																						((encoremode) ? " | Encore" : ""))));
 				
 				// Mods //
 				if (modifiedgame && numwadfiles > (mainwads+1))
 					strlcat(gameType, ((numwadfiles - (mainwads+1) > 1) ? va(" With %d Mods", numwadfiles - (mainwads+1)) : (" With 1 Mod")), 105);
 				
 				// Spectators //
-				if (!players[consoleplayer].spectator)
-				{
-					snprintf(spectatorGrammar, 4, (((displayplayers[stplyr-players] != consoleplayer) || (cv_discordstatusmemes.value && (displayplayers[stplyr-players] != consoleplayer))) ? "ing" : "er"));
-					snprintf(spectatorType, 21, "View%s", spectatorGrammar);
-				}
-				else
-				{
-					snprintf(lifeGrammar, 12, ", Dead; ");
-					snprintf(spectatorGrammar, 4, (((displayplayers[stplyr-players] != consoleplayer) || (cv_discordstatusmemes.value && (displayplayers[stplyr-players] == consoleplayer))) ? "ing" : "or"));
-					snprintf(spectatorType, 21, "Spectat%s", spectatorGrammar);
+				if (playeringame[displayplayers[stplyr-players]])
+				{	
+					if (!players[consoleplayer].spectator)
+					{
+						snprintf(spectatorGrammar, 4, (((displayplayers[stplyr-players] != consoleplayer) || (cv_discordstatusmemes.value && (displayplayers[stplyr-players] != consoleplayer))) ? "ing" : "er"));
+						snprintf(spectatorType, 21, "View%s", spectatorGrammar);
+					}
+					else
+					{
+						snprintf(lifeGrammar, 12, ", Dead; ");
+						snprintf(spectatorGrammar, 4, (((displayplayers[stplyr-players] != consoleplayer) || (cv_discordstatusmemes.value && (displayplayers[stplyr-players] == consoleplayer))) ? "ing" : "or"));
+						snprintf(spectatorType, 21, "Spectat%s", spectatorGrammar);
+						
+						if (displayplayers[stplyr-players] == consoleplayer)
+							snprintf(lifeType, 27, (!cv_discordstatusmemes.value ? "In %s Mode" : "%s Air"), spectatorType);
+					}
 					
-					if (displayplayers[stplyr-players] == consoleplayer)
-						snprintf(lifeType, 27, (!cv_discordstatusmemes.value ? "In %s Mode" : "%s Air"), spectatorType);
+					// Viewpoints //
+					if (displayplayers[stplyr-players] != consoleplayer)
+						snprintf(lifeType, 30, "%s %s", spectatorType, player_names[stplyr-players]);
 				}
-				
-				// Viewpoints //
-				if (displayplayers[stplyr-players] != consoleplayer)
-					snprintf(lifeType, 30, "%s %s", spectatorType, player_names[stplyr-players]);
 			}
 
 			//// Statuses That Appear Whenever ////
@@ -858,12 +860,12 @@ void DRPC_UpdatePresence(void)
 		// Side Characters //
 		if (cv_discordshowonstatus.value && playeringame[1] && players[1].bot)
 		{
-			for (i = 0; i < 23; i++) // Electric Boogalo
+			for (i = 0; i < 34; i++)
 			{
 				if (strcmp(skins[players[1].skin].name, supportedSkins[i]) == 0)
 				{	
 					snprintf(charimgS, 36, "%s%s", charImageType, skins[players[1].skin].name);
-					break;
+					break; // Electric Boogalo
 				}
 			}
 		}
@@ -900,7 +902,7 @@ void DRPC_UpdatePresence(void)
 	
 	//// Custom Statuses ////
 	//// NOTE: The Main Custom Status Functions can be Found in m_menu.c! The following is just backported from there.
-	if (cv_discordshowonstatus.value == 8)
+	if (cv_discordshowonstatus.value == 7)
 	{
 		discordPresence.details = cv_customdiscorddetails.string;
 		discordPresence.state = cv_customdiscordstate.string;
