@@ -262,6 +262,7 @@ void Addons_option_Onchange(void);
 
 // Discord menu updating
 #ifdef HAVE_DISCORDRPC
+extern boolean discordMenuOpen;
 void Discord_option_Onchange(void);
 #endif
 

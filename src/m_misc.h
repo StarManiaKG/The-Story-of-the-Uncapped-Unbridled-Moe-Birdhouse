@@ -47,7 +47,7 @@ void M_StopMovie(void);
 #else
 #define CONFIGFILENAME "kartconfig.cfg"
 #endif
-#define AUTOLOADFILENAME "autoload.cfg"
+#define AUTOLOADCONFIGFILENAME "autoload.cfg"
 
 INT32 M_MapNumber(char first, char second);
 

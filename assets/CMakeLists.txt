@@ -17,7 +17,8 @@ set(SRB2_ASSET_HASHED
 gfx.kart;\
 textures.kart;\
 chars.kart;\
-maps.kart"
+maps.kart;\
+tsotuumb.kart"
 	CACHE STRING "Asset filenames to apply MD5 checks. No spaces between entries!"
 )
 

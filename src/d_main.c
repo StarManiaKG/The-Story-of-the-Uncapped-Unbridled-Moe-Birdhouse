@@ -931,7 +931,7 @@ static void D_AutoLoadAddons(const char *file, char **filearray)
 
 	newfile = malloc(strlen(file) + 1);
 	if (!newfile)
-		I_Error("No more free memory to Autoload %s", AUTOLOADFILENAME);
+		I_Error("No more free memory to Autoload %s", AUTOLOADCONFIGFILENAME);
 
 	autoloading = true;
 	strcpy(newfile, file);
@@ -1024,6 +1024,7 @@ static void IdentifyVersion(void)
 #ifdef USE_PATCH_KART
 	D_AddFile(va(pandf,srb2waddir,"patch.kart"), startupwadfiles);
 #endif
+	D_AddFile(va(pandf,srb2waddir,"tsotuumb.kart"), startupwadfiles);
 
 #if !defined (HAVE_SDL) || defined (HAVE_MIXER)
 #define MUSICTEST(str) \
@@ -1037,6 +1038,7 @@ static void IdentifyVersion(void)
 	}
 	MUSICTEST("sounds.kart")
 	MUSICTEST("music.kart")
+	MUSICTEST("jukebox.kart")
 #undef MUSICTEST
 #endif
 }
@@ -1103,7 +1105,7 @@ void D_SRB2Main(void)
 	UINT16 wadnum;
 	char *name;
 
-	const char *autoloadpath = va("%s"PATHSEP"%s", srb2home, AUTOLOADFILENAME); //autoload wad feature
+	FILE *autoloadpath; //autoload wad feature
 
 	INT32 pstartmap = 1;
 	boolean autostart = false;
@@ -1320,8 +1322,7 @@ void D_SRB2Main(void)
 	if (!W_InitMultipleFiles(startuppwads, true))
 		CONS_Error("A PWAD file was not found or not valid.\nCheck the log to see which ones.\n");
 	
-	if (!FIL_ReadFileOK(autoloadpath))
-		D_CleanFile(startupwadfiles);
+	D_CleanFile(startupwadfiles);
 
 	mainwads = 0;
 		
@@ -1339,6 +1340,7 @@ void D_SRB2Main(void)
 #ifdef USE_PATCH_KART
 	mainwads++; W_VerifyFileMD5(mainwads, ASSET_HASH_PATCH_KART);		// patch.kart
 #endif
+	mainwads++; W_VerifyFileMD5(mainwads, ASSET_HASH_TSOTUUMB_KART);		// tsotuumb.kart
 #else
 #ifdef USE_PATCH_DTA
 	mainwads++;	// patch.dta
@@ -1350,6 +1352,7 @@ void D_SRB2Main(void)
 #ifdef USE_PATCH_KART
 	mainwads++;	// patch.kart
 #endif
+	mainwads++; // tsotuumb.kart
 
 #endif //ifndef DEVELOP
 
@@ -1379,12 +1382,14 @@ void D_SRB2Main(void)
 
 	COM_Init();
 
-	if (FIL_ReadFileOK(autoloadpath))
+	// autoload other mods
+	autoloadpath = fopen(va("%s"PATHSEP"%s",srb2home,AUTOLOADCONFIGFILENAME), "r");
+	
+	if (autoloadpath)
 	{
-		CONS_Printf("D_AutoLoadAddons(): Autoloading Addons.\n");
-		D_AutoLoadAddons(va(pandf,srb2home,AUTOLOADFILENAME), startupwadfiles);
+		CONS_Printf("D_AutoLoadAddons(): Autoloading Addons...\n");
+		D_AutoLoadAddons(va(pandf,srb2home,AUTOLOADCONFIGFILENAME), startupwadfiles);
 		D_CleanFile(startupwadfiles);
-		mainwads++;
 	}
 
 	//
@@ -1742,11 +1747,7 @@ void D_SRB2Main(void)
 	}
 
 #ifdef HAVE_DISCORDRPC
-	if (! dedicated)
-	{
-		DRPC_Init();
-	}
-
+	DRPC_Init();
 #endif
 }
 

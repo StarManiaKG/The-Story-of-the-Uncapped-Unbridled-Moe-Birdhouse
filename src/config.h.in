@@ -25,6 +25,7 @@
 #ifdef USE_PATCH_KART
 #define ASSET_HASH_PATCH_KART    "00000000000000000000000000000000"
 #endif
+#define ASSET_HASH_TSOTUUMB_KART  "${SRB2_ASSET_tsotuumb.kart_HASH}"
 
 #define SRB2_COMP_REVISION       "${SRB2_COMP_REVISION}"
 #define SRB2_COMP_BRANCH         "${SRB2_COMP_BRANCH}"
@@ -41,6 +42,7 @@
  * Last updated 2022 / 08 / 16 - Kart v1.4 - Main assets
  * Last updated 2022 / 08 / 19 - Kart v1.5 - gfx.kart
  * Last updated 2022 / 11 / 01 - Kart v1.6 - gfx.kart, maps.kart
+ * Last updated 2023 / 03 / 08 - TSOTUUMB v1.6 - added tsotuumb.kart
  */
 
 // Base SRB2 hashes
@@ -57,6 +59,7 @@
 #ifdef USE_PATCH_KART
 #define ASSET_HASH_PATCH_KART    "00000000000000000000000000000000"
 #endif
+#define ASSET_HASH_TSOTUUMB_KART  "61816b44cc8f7b0fabb3737e28b3bbfc"
 
 #endif
 #endif //config.h or something lol
