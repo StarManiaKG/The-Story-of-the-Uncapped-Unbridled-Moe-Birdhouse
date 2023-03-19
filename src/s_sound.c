@@ -1299,8 +1299,16 @@ static UINT32    queue_fadeinms;
 /// Music Definitions
 /// ------------------------
 
+musicdef_t soundtestsfx = {
+	"_STSFX", // prevents exactly one valid track name from being used on the sound test
+	"Sound Effects",
+	NULL
+};
+
+musicdef_t **soundtestdefs = NULL;
 musicdef_t *musicdefstart = NULL; // First music definition
 struct cursongcredit cursongcredit; // Currently displayed song credit info
+INT32 numsoundtestdefs = 0;
 
 //
 // search for music definition in wad
@@ -1432,7 +1440,7 @@ skip_lump:
 			}
 
 			if (!stricmp(stoken, "usage")) {
-#if 0 // Ignore for now
+#if 0
 				STRBUFCPY(def->usage, value);
 				for (value = def->usage; *value; value++)
 					if (*value == '_') *value = ' '; // turn _ into spaces.
@@ -1467,6 +1475,34 @@ void S_InitMusicDefs(void)
 	UINT16 i;
 	for (i = 0; i < numwadfiles; i++)
 		S_LoadMusicDefs(i);
+}
+
+//
+// S_PrepareSoundTest
+//
+// Prepare sound test. What am I, your butler?
+//
+boolean S_PrepareSoundTest(void)
+{
+	musicdef_t *def;
+	INT32 pos = numsoundtestdefs = 0;
+
+	for (def = musicdefstart; def; def = def->next)
+		numsoundtestdefs++;
+
+	if (!numsoundtestdefs)
+		return false;
+
+	if (soundtestdefs)
+		Z_Free(soundtestdefs);
+
+	if (!(soundtestdefs = Z_Malloc(numsoundtestdefs*sizeof(musicdef_t *), PU_STATIC, NULL)))
+		I_Error("S_PrepareSoundTest(): could not allocate soundtestdefs.");
+
+	for (def = musicdefstart; def /*&& i < numsoundtestdefs*/; def = def->next)
+		soundtestdefs[pos++] = def;
+
+	return true;
 }
 
 //

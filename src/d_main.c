@@ -1340,7 +1340,7 @@ void D_SRB2Main(void)
 #ifdef USE_PATCH_KART
 	mainwads++; W_VerifyFileMD5(mainwads, ASSET_HASH_PATCH_KART);		// patch.kart
 #endif
-	mainwads++; W_VerifyFileMD5(mainwads, ASSET_HASH_TSOTUUMB_KART);		// tsotuumb.kart
+	mainwads++; W_VerifyFileMD5(mainwads, ASSET_HASH_TSOTUUMB_KART);		// tsotuumb.kart -- 5
 #else
 #ifdef USE_PATCH_DTA
 	mainwads++;	// patch.dta

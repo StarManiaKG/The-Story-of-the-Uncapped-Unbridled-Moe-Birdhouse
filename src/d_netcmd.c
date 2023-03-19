@@ -1042,6 +1042,7 @@ void D_RegisterClientCommands(void)
 	CV_RegisterVar(&cv_discordshowonstatus);
 	CV_RegisterVar(&cv_discordstatusmemes);
 	CV_RegisterVar(&cv_discordcharacterimagetype);
+
 	// Custom Things //
 	CV_RegisterVar(&cv_customdiscorddetails);
 	CV_RegisterVar(&cv_customdiscordstate);
@@ -1056,6 +1057,9 @@ void D_RegisterClientCommands(void)
     CV_RegisterVar(&cv_customdiscordlargeimagetext);
     CV_RegisterVar(&cv_customdiscordsmallimagetext);
 #endif
+
+	// star stuff yay
+	CV_RegisterVar(&cv_jukeboxhud);
 }
 
 /** Checks if a name (as received from another player) is okay.

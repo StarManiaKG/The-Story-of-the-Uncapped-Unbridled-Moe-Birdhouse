@@ -213,7 +213,7 @@ static void M_DrawDiscordRequests(void);
 static void M_TsotuumbOptions(INT32 choice);
 
 boolean jukeboxMusicPlaying = false;
-char jukeboxMusicName[32+20+12];
+char jukeboxMusicName[255];
 char jukeboxMusicTrack[7];
 static void M_TsotuumbJukebox(INT32 choice);
 static void M_DrawTsotuumbJukebox(void);
@@ -329,6 +329,7 @@ menu_t OP_SoundOptionsDef;
 menu_t OP_DataOptionsDef, OP_ScreenshotOptionsDef, OP_EraseDataDef;
 #ifdef HAVE_DISCORDRPC
 menu_t OP_DiscordOptionsDef;
+menu_t OP_CustomStatusDef;
 menu_t OP_CustomStatusOutputDef;
 #endif
 menu_t OP_HUDOptionsDef, OP_ChatOptionsDef;
@@ -425,6 +426,9 @@ static void Dummymenuplayer_OnChange(void);
 //static void Dummymares_OnChange(void);
 static void Dummystaff_OnChange(void);
 
+// Star function stuff lol
+static void STAR_JukeboxHUD_OnChange(void);
+
 // ==========================================================================
 // CONSOLE VARIABLES AND THEIR POSSIBLE VALUES GO HERE.
 // ==========================================================================
@@ -497,6 +501,9 @@ static consvar_t cv_dummylives = {"dummylives", "0", CV_HIDEN, liveslimit_cons_t
 static consvar_t cv_dummycontinues = {"dummycontinues", "0", CV_HIDEN, liveslimit_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 //static consvar_t cv_dummymares = {"dummymares", "Overall", CV_HIDEN|CV_CALL, dummymares_cons_t, Dummymares_OnChange, 0, NULL, NULL, 0, 0, NULL};
 static consvar_t cv_dummystaff = {"dummystaff", "0", CV_HIDEN|CV_CALL, dummystaff_cons_t, Dummystaff_OnChange, 0, NULL, NULL, 0, 0, NULL};
+
+// STAR Commands Yay
+consvar_t cv_jukeboxhud = {"jukeboxhud", "On", CV_SAVE|CV_CALL, CV_OnOff, STAR_JukeboxHUD_OnChange, 0, NULL, NULL, 0, 0, NULL};
 
 // ==========================================================================
 // ORGANIZATION START.
@@ -1482,32 +1489,11 @@ static menuitem_t OP_DiscordOptionsMenu[] =
 	{IT_STRING | IT_CVAR,				NULL,  "Ask to Join Permissions",		&cv_discordinvites,		 	 		   50},
 
 	{IT_STRING | IT_CVAR,				NULL, 		"Show on Status",			&cv_discordshowonstatus, 	 	       60},
+	{IT_STRING | IT_SUBMENU,			NULL,  "Custom Discord Status",			&OP_CustomStatusDef,	           	   70},
 	
-	{IT_HEADER,							NULL,	"Misc. Rich Presence Settings",	NULL,					 	 		   70},
-	{IT_STRING | IT_CVAR,				NULL, 		"Memes on Status",			&cv_discordstatusmemes,	 	 		   80},
-	{IT_STRING | IT_CVAR,				NULL, 		"Skin Image Type",			&cv_discordcharacterimagetype,		   90},
-
-	// Custom Things
-	{IT_HEADER,							NULL, "Custom Discord Status",			NULL,					 	 		  100},
-	{IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 		"Header",			        &cv_customdiscorddetails, 	 		  110},
-	{IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 		"State",			        &cv_customdiscordstate, 			  138},
-
-	{IT_STRING | IT_CVAR,		        NULL, 	"Large Image Type",				&cv_customdiscordlargeimagetype,      174},
-    {IT_STRING | IT_CVAR,		        NULL, 	"Small Image Type",				&cv_customdiscordsmallimagetype,      184},
-
-	{IT_STRING | IT_CVAR,		        NULL, 	"Large Image",					NULL, 								  204}, // Handled in discord_option_onchange
-	{IT_STRING | IT_CVAR,		        NULL, 	"Small Image",					NULL, 								  214}, // Also handled in discord_option_onchange
-
-    {IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 	"Large Image Text",				&cv_customdiscordlargeimagetext,      234},
-    {IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 	"Small Image Text",				&cv_customdiscordsmallimagetext,      262},
-
-    // Let's Output Our Stuff
-	{IT_STRING | IT_SUBMENU,			NULL, 		"Output",					&OP_CustomStatusOutputDef,	          280},
-};
-
-static menuitem_t OP_CustomStatusOutputMenu[] =
-{
-	{IT_HEADER,		NULL,	"Custom Status Output",		NULL,	0},
+	{IT_HEADER,							NULL,	"Misc. Rich Presence Settings",	NULL,					 	 		   80},
+	{IT_STRING | IT_CVAR,				NULL, 		"Memes on Status",			&cv_discordstatusmemes,	 	 		   90},
+	{IT_STRING | IT_CVAR,				NULL, 		"Skin Image Type",			&cv_discordcharacterimagetype,		  100},
 };
 
 enum
@@ -1517,11 +1503,40 @@ enum
 	op_discordasks,
 	op_discordinvites,
 	op_discordshowonstatus,
+	op_customstatusoptionsmenu,
 
 	op_discordmiscoptionsheader,
 	op_discordstatusmemes,	
 	op_discordcharacterimagetype,
+};
 
+static menuitem_t OP_CustomStatusOptionsMenu[] =
+{
+	// Custom Things
+	{IT_HEADER,							NULL, "Custom Discord Status",			NULL,					 	 		    0},
+	{IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 		"Header",			        &cv_customdiscorddetails, 	 		   10},
+	{IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 		"State",			        &cv_customdiscordstate, 			   38},
+
+	{IT_STRING | IT_CVAR,		        NULL, 	"Large Image Type",				&cv_customdiscordlargeimagetype,       64},
+    {IT_STRING | IT_CVAR,		        NULL, 	"Small Image Type",				&cv_customdiscordsmallimagetype,       74},
+
+	{IT_STRING | IT_CVAR,		        NULL, 	"Large Image",					NULL, 								   94}, // Handled in discord_option_onchange
+	{IT_STRING | IT_CVAR,		        NULL, 	"Small Image",					NULL, 								  104}, // Also handled in discord_option_onchange
+
+    {IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 	"Large Image Text",				&cv_customdiscordlargeimagetext,      124},
+    {IT_STRING | IT_CVAR | IT_CV_STRING,NULL, 	"Small Image Text",				&cv_customdiscordsmallimagetext,      152},
+
+    // Let's Output Our Stuff
+	{IT_STRING | IT_SUBMENU,			NULL, 		"Output",					&OP_CustomStatusOutputDef,	          180},
+};
+
+static menuitem_t OP_CustomStatusOutputMenu[] =
+{
+	{IT_HEADER,		NULL,	"Custom Status Output",		NULL,	0},
+};
+
+enum
+{
 	op_customstatusheader,
 	op_customdiscorddetails,
 	op_customdiscordstate,
@@ -1713,24 +1728,36 @@ static menuitem_t OP_MonitorToggleMenu[] =
 // STAR OPTIONS LETS GOOOOOOOOOOOOO
 static menuitem_t OP_TsotuumbOptionsMenu[] =
 {
-	{IT_HEADER, 			 NULL, 	"Extra Server Options", 	NULL,					    0},
-	{IT_STRING | IT_CVAR,    NULL, "Show Connecting Players",   &cv_noticedownload,        10},
+	{IT_HEADER, 			 NULL, 	"Extra Camera Options", 	NULL,					    0},
+	{IT_STRING | IT_CVAR,    NULL, 	"Screen Tilting",   		&cv_tilting,        	   10},
+	{IT_STRING | IT_CVAR,    NULL, 	"Quake Tilting",  			&cv_quaketilt,        	   20},
+	{IT_STRING | IT_CVAR,    NULL, 	"Tilt Smoothing Factor",  	&cv_tiltsmoothing,         30},
 
-	{IT_HEADER, 			 NULL, 	"Miscellanious Options",    NULL,					   20},
-	{IT_STRING | IT_CALL, 	 NULL, 	"Jukebox",					NULL,   	   			   30},
+	{IT_HEADER, 			 NULL, 	"Extra Server Options", 	NULL,					   40},
+	{IT_STRING | IT_CVAR,    NULL, 	"Show Connecting Players",  &cv_noticedownload,        50},
+
+	{IT_HEADER, 			 NULL, 	"Miscellanious Options",    NULL,					   60},
+	{IT_STRING | IT_CALL, 	 NULL, 	"Jukebox",					M_TsotuumbJukebox,   	   70},
+	{IT_STRING | IT_CVAR, 	 NULL, 	"Jukebox HUD",				&cv_jukeboxhud,   	   	   80},
 };
-//static menuitem_t OP_TsotuumbJukeboxMenu[] =
-//{
-//	{IT_KEYHANDLER | IT_STRING, 	 NULL, "", M_HandleTsotuumbJukebox, 0},
-//};
+static menuitem_t OP_TsotuumbJukeboxMenu[] =
+{
+	{IT_KEYHANDLER | IT_STRING, 	 NULL, "", M_HandleTsotuumbJukebox, 0},
+};
 
 enum
 {
-	op_extraserveroptions = 0,
+	op_cameraoptions = 0,
+	op_cameratilt,
+	op_tiltquake,
+	op_tiltsmoothing,
+
+	op_extraserveroptions,
 	op_noticedownload,
 
-	op_miscoptions = 2,
+	op_miscoptions,
 	op_jukebox,
+	op_jukeboxhud,
 };
 
 // ==========================================================================
@@ -2230,8 +2257,8 @@ menu_t OP_OpenGLColorDef =
 #endif
 
 //star stuff lol
-menu_t OP_TsotuumbOptionsDef = DEFAULTMENUSTYLE(NULL, OP_TsotuumbOptionsMenu, &OP_MainDef, 30, 30); //M_TSOTUUMBT3RD
-/*menu_t OP_TsotuumbJukeboxDef =
+menu_t OP_TsotuumbOptionsDef = DEFAULTMENUSTYLE(NULL, OP_TsotuumbOptionsMenu, &OP_MainDef, 30, 30); //M_STAR
+menu_t OP_TsotuumbJukeboxDef =
 {
 	NULL,
 	sizeof (OP_TsotuumbJukeboxMenu)/sizeof (menuitem_t),
@@ -2241,14 +2268,15 @@ menu_t OP_TsotuumbOptionsDef = DEFAULTMENUSTYLE(NULL, OP_TsotuumbOptionsMenu, &O
 	60, 150,
 	0,
 	NULL
-};*/
+};
 
 menu_t OP_DataOptionsDef = DEFAULTMENUSTYLE("M_DATA", OP_DataOptionsMenu, &OP_MainDef, 60, 30);
 menu_t OP_ScreenshotOptionsDef = DEFAULTMENUSTYLE("M_SCSHOT", OP_ScreenshotOptionsMenu, &OP_DataOptionsDef, 30, 30);
 menu_t OP_AddonsOptionsDef = DEFAULTMENUSTYLE("M_ADDONS", OP_AddonsOptionsMenu, &OP_DataOptionsDef, 30, 30);
 #ifdef HAVE_DISCORDRPC
-menu_t OP_DiscordOptionsDef = DEFAULTMENUSTYLE("M_DISCORD", OP_DiscordOptionsMenu, &OP_DiscordOptionsDef, 30, 30);
-menu_t OP_CustomStatusOutputDef = DEFAULTMENUSTYLE("M_DISCORDCUSTOMSTATUSOUTPUT", OP_CustomStatusOutputMenu, &OP_DiscordOptionsDef, 30, 30);
+menu_t OP_DiscordOptionsDef = DEFAULTMENUSTYLE("M_DISC", OP_DiscordOptionsMenu, &OP_MainDef, 30, 30);
+menu_t OP_CustomStatusDef = DEFAULTMENUSTYLE(NULL, OP_CustomStatusOptionsMenu, &OP_DiscordOptionsDef, 30, 30); // M_DISCC
+menu_t OP_CustomStatusOutputDef = DEFAULTMENUSTYLE(NULL, OP_CustomStatusOutputMenu, &OP_CustomStatusDef, 30, 30); // M_DISCCO
 #endif
 menu_t OP_EraseDataDef = DEFAULTMENUSTYLE("M_DATA", OP_EraseDataMenu, &OP_DataOptionsDef, 30, 30);
 
@@ -2527,47 +2555,50 @@ void Discord_option_Onchange(void)
 	
 	OP_DiscordOptionsMenu[op_discordshowonstatus].status =
 		(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
-
-	// Custom Status //
+	
 	OP_DiscordOptionsMenu[op_discordcharacterimagetype].status =
 		(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
-	OP_DiscordOptionsMenu[op_customstatusheader].status =
+	// Custom Status //
+	OP_DiscordOptionsMenu[op_customstatusoptionsmenu].status =
+		(cv_discordrp.value ? IT_STRING|IT_SUBMENU : IT_DISABLED);
+
+	OP_CustomStatusOptionsMenu[op_customstatusheader].status =
 		(cv_discordrp.value ? IT_HEADER : IT_DISABLED);
 
-	OP_DiscordOptionsMenu[op_customdiscorddetails].status =
+	OP_CustomStatusOptionsMenu[op_customdiscorddetails].status =
 		(cv_discordrp.value ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 	
-	OP_DiscordOptionsMenu[op_customdiscordstate].status =
+	OP_CustomStatusOptionsMenu[op_customdiscordstate].status =
 		(cv_discordrp.value ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
     // Custom Images //
-	OP_DiscordOptionsMenu[op_customdiscordlargeimagetype].status =
+	OP_CustomStatusOptionsMenu[op_customdiscordlargeimagetype].status =
     		(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
-    OP_DiscordOptionsMenu[op_customdiscordsmallimagetype].status =
+    OP_CustomStatusOptionsMenu[op_customdiscordsmallimagetype].status =
     		(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
 
 	// Custom Image Item Actions
-    OP_DiscordOptionsMenu[op_customdiscordlargeimage].status =
+    OP_CustomStatusOptionsMenu[op_customdiscordlargeimage].status =
         	(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
-	OP_DiscordOptionsMenu[op_customdiscordlargeimage].itemaction =
+	OP_CustomStatusOptionsMenu[op_customdiscordlargeimage].itemaction =
             (cv_customdiscordlargeimagetype.value <= 2 ? &cv_customdiscordlargecharacterimage : (cv_customdiscordlargeimagetype.value == 3 ? &cv_customdiscordlargemapimage : &cv_customdiscordlargemiscimage));
 
-    OP_DiscordOptionsMenu[op_customdiscordsmallimage].status =
+    OP_CustomStatusOptionsMenu[op_customdiscordsmallimage].status =
         	(cv_discordrp.value ? IT_CVAR|IT_STRING : IT_DISABLED);
-	OP_DiscordOptionsMenu[op_customdiscordsmallimage].itemaction =
+	OP_CustomStatusOptionsMenu[op_customdiscordsmallimage].itemaction =
             (cv_customdiscordsmallimagetype.value <= 2 ? &cv_customdiscordsmallcharacterimage : (cv_customdiscordsmallimagetype.value == 3 ? &cv_customdiscordsmallmapimage : &cv_customdiscordsmallmiscimage));
 	// End of Item Actions
 
-    OP_DiscordOptionsMenu[op_customdiscordlargeimagetext].status =
+    OP_CustomStatusOptionsMenu[op_customdiscordlargeimagetext].status =
     		(cv_discordrp.value ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
-    OP_DiscordOptionsMenu[op_customdiscordsmallimagetext].status =
+    OP_CustomStatusOptionsMenu[op_customdiscordsmallimagetext].status =
             (cv_discordrp.value ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
     // Output Status //
-	OP_DiscordOptionsMenu[op_customstatusoutputdef].status = IT_DISABLED;
+	OP_CustomStatusOptionsMenu[op_customstatusoutputdef].status = IT_DISABLED;
 		//(cv_discordrp.value ? IT_STRING|IT_SUBMENU : IT_DISABLED);
 
 	//// Our Rich Presence is On! ////
@@ -2578,36 +2609,39 @@ void Discord_option_Onchange(void)
 			(cv_discordasks.value ? IT_CVAR|IT_STRING : IT_GRAYEDOUT);
 		
 		// Custom Statuses //
-		OP_DiscordOptionsMenu[op_customstatusheader].status =
+		OP_DiscordOptionsMenu[op_customstatusoptionsmenu].status =
+			(cv_discordshowonstatus.value == 7 ? IT_STRING|IT_SUBMENU : IT_DISABLED);
+
+		OP_CustomStatusOptionsMenu[op_customstatusheader].status =
 			(cv_discordshowonstatus.value == 7 ? IT_HEADER : IT_DISABLED);
 		
-		OP_DiscordOptionsMenu[op_customdiscorddetails].status =
+		OP_CustomStatusOptionsMenu[op_customdiscorddetails].status =
 			(cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
-		OP_DiscordOptionsMenu[op_customdiscordstate].status =
+		OP_CustomStatusOptionsMenu[op_customdiscordstate].status =
 			(cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
         // Custom Images //
-		OP_DiscordOptionsMenu[op_customdiscordlargeimagetype].status =
+		OP_CustomStatusOptionsMenu[op_customdiscordlargeimagetype].status =
             (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
-        OP_DiscordOptionsMenu[op_customdiscordsmallimagetype].status =
+        OP_CustomStatusOptionsMenu[op_customdiscordsmallimagetype].status =
             (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
-        OP_DiscordOptionsMenu[op_customdiscordlargeimage].status =
+        OP_CustomStatusOptionsMenu[op_customdiscordlargeimage].status =
             (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
-        OP_DiscordOptionsMenu[op_customdiscordsmallimage].status =
+        OP_CustomStatusOptionsMenu[op_customdiscordsmallimage].status =
             (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
-        OP_DiscordOptionsMenu[op_customdiscordlargeimagetext].status =
+        OP_CustomStatusOptionsMenu[op_customdiscordlargeimagetext].status =
             (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
-        OP_DiscordOptionsMenu[op_customdiscordsmallimagetext].status =
+        OP_CustomStatusOptionsMenu[op_customdiscordsmallimagetext].status =
             (cv_discordshowonstatus.value == 7 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
         // Output Status //
-		//OP_DiscordOptionsMenu[op_customstatusoutputdef].status =
+		//OP_CustomStatusOptionsMenu[op_customstatusoutputdef].status =
 			//(cv_discordshowonstatus.value == 7 ? IT_STRING|IT_SUBMENU : IT_DISABLED);
 
         //// Custom Discord Statuses ////
@@ -2615,17 +2649,17 @@ void Discord_option_Onchange(void)
         {
             // Display Different Options Based on Image Type Chosen //
             // Large Images
-        	OP_DiscordOptionsMenu[op_customdiscordlargeimage].status =
+        	OP_CustomStatusOptionsMenu[op_customdiscordlargeimage].status =
                 (cv_customdiscordlargeimagetype.value != 5 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
-            OP_DiscordOptionsMenu[op_customdiscordlargeimagetext].status =
+            OP_CustomStatusOptionsMenu[op_customdiscordlargeimagetext].status =
                 (cv_customdiscordlargeimagetype.value != 5 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 
             // Small Images
-        	OP_DiscordOptionsMenu[op_customdiscordsmallimage].status =
+        	OP_CustomStatusOptionsMenu[op_customdiscordsmallimage].status =
                 (cv_customdiscordsmallimagetype.value != 5 ? IT_CVAR|IT_STRING : IT_DISABLED);
 
-            OP_DiscordOptionsMenu[op_customdiscordsmallimagetext].status =
+            OP_CustomStatusOptionsMenu[op_customdiscordsmallimagetext].status =
                 (cv_customdiscordsmallimagetype.value != 5 ? IT_CVAR|IT_STRING|IT_CV_STRING : IT_DISABLED);
 		}
 
@@ -2633,6 +2667,16 @@ void Discord_option_Onchange(void)
     }
 }
 #endif
+
+// Other STAR stuff yay
+static void STAR_JukeboxHUD_OnChange(void)
+{
+	if (cv_jukeboxhud.value)
+	{
+		if (jukeboxMusicPlaying)
+			initJukeboxHUD = true;
+	}
+}
 
 // ==========================================================================
 // END ORGANIZATION STUFF.
@@ -5406,7 +5450,7 @@ static void M_AddonAutoLoad(INT32 ch)
 {
 	// initalize these variables
 	const char *path;
-	char *filetowrite[MAX_WADPATH];
+	char filetowrite[MAX_WADPATH];
 	FILE *autoloadconfigfile;
 
 	if (ch != 'y' && ch != KEY_ENTER && ch != KEY_RSHIFT)
@@ -12444,18 +12488,10 @@ static boolean confirmAccept = false;
 
 static void M_DiscordOptions(INT32 choice)
 {
+	(void)choice;
+
 	Discord_option_Onchange();
-
-	if (choice == KEY_ESCAPE)
-	{
-		S_StartSound(NULL, sfx_s3kb2);
-		discordMenuOpen = (choice == KEY_ESCAPE ? false : true);
-
-		if (currentMenu->prevMenu)
-			M_SetupNextMenu(currentMenu->prevMenu);
-		else
-			M_ClearMenus(true);
-	}
+	discordMenuOpen = true;
 
 	M_SetupNextMenu(&OP_DiscordOptionsDef);
 }
@@ -12614,6 +12650,12 @@ static void M_DrawDiscordRequests(void)
 #endif
 
 //Star Stuff WEEEE
+static musicdef_t *curplaying = NULL;
+static INT32 st_sel = 0;
+static fixed_t st_time = 0;
+static patch_t* st_radio[9];
+static patch_t* st_launchpad[4];
+
 static void M_TsotuumbOptions(INT32 choice)
 {	
 	if ((splitscreen || (netgame && !server)) || currentMenu == &MP_ServerDef)
@@ -12623,13 +12665,13 @@ static void M_TsotuumbOptions(INT32 choice)
 
 	for (INT32 i = 0; i < MAXUNLOCKABLES; i++)
 	{
-		OP_TsotuumbOptionsMenu[op_jukebox].status = IT_GRAYEDOUT;
-		OP_TsotuumbOptionsMenu[op_jukebox].itemaction = NULL;
+		//OP_TsotuumbOptionsMenu[op_jukebox].status = IT_GRAYEDOUT;
+		//OP_TsotuumbOptionsMenu[op_jukebox].itemaction = NULL;
 		
 		if ((unlockables[i].unlocked && unlockables[i].type == SECRET_SOUNDTEST) || (modifiedgame && !savemoddata)) // for fairness sake
 		{
-			//OP_TsotuumbOptionsMenu[op_jukebox].status = IT_STRING|IT_CALL;
-			//OP_TsotuumbOptionsMenu[op_jukebox].itemaction = M_TsotuumbJukebox;
+			OP_TsotuumbOptionsMenu[op_jukebox].status = IT_STRING|IT_CALL;
+			OP_TsotuumbOptionsMenu[op_jukebox].itemaction = M_TsotuumbJukebox;
 			break;
 		}
 	}
@@ -12647,30 +12689,41 @@ static void M_TsotuumbOptions(INT32 choice)
 	M_SetupNextMenu(&OP_TsotuumbOptionsDef);
 }
 
-/*
 //Star Stuff WEEEE
+static void M_CacheSoundTest(void)
+{
+	UINT8 i;
+	char buf[8];
+
+	STRBUFCPY(buf, "M_RADIOn");
+	for (i = 0; i < 9; i++)
+	{
+		buf[7] = (char)('0'+i);
+		st_radio[i] = W_CachePatchName(buf, PU_CACHE);
+	}
+
+	STRBUFCPY(buf, "M_LPADn");
+	for (i = 0; i < 4; i++)
+	{
+		buf[6] = (char)('0'+i);
+		st_launchpad[i] = W_CachePatchName(buf, PU_CACHE);
+	}
+}
+
 static void M_TsotuumbJukebox(INT32 choice)
 {
-	INT32 ul = skyRoomMenuTranslations[choice-1];
+	(void)choice;
 
-	soundtestpage = (UINT8)(unlockables[ul].variable);
-	if (!soundtestpage)
-		soundtestpage = 1;
-
-	if (!S_PrepareSoundTest())
-	{
-		M_StartMessage(M_GetText("No accessible tracks found in the jukebox.\n"),NULL,MM_NOTHING);
-		return;
-	}
+	//if (!S_PrepareSoundTest())
+	//{
+		//M_StartMessage(M_GetText("No accessible tracks found in the jukebox.\n"),NULL,MM_NOTHING);
+		//return;
+	//}
 
 	M_CacheSoundTest();
 
 	st_time = 0;
-
 	st_sel = 0;
-
-	st_cc = cv_closedcaptioning.value; // hack;
-	cv_closedcaptioning.value = 1; // hack
 
 	M_SetupNextMenu(&OP_TsotuumbJukeboxDef);
 }
@@ -12680,7 +12733,7 @@ static void M_DrawTsotuumbJukebox(void)
 	INT32 x, y, i;
 	fixed_t hscale = FRACUNIT/2, vscale = FRACUNIT/2, bounce = 0;
 	UINT8 frame[4] = {0, 0, -1, SKINCOLOR_RUBY};
-
+#if 0
 	// let's handle the ticker first. ideally we'd tick this somewhere else, BUT...
 	if (jukeboxMusicPlaying)
 	{
@@ -12690,54 +12743,39 @@ static void M_DrawTsotuumbJukebox(void)
 			{
 				frame[1] = (2 - (st_time >> FRACBITS));
 				frame[2] = ((cv_soundtest.value - 1) % 9);
-				frame[3] += (((cv_soundtest.value - 1) / 9) % (FIRSTSUPERCOLOR - frame[3]));
+				frame[3] += (((cv_soundtest.value - 1) / 9) % (MAXSKINCOLORS - frame[3]));
 				if (st_time < (2 << FRACBITS))
 					st_time += renderdeltatics;
 			}
 		}
 		else
 		{
-			fixed_t stoppingtics = (fixed_t)(curplaying->stoppingtics) << FRACBITS;
-			if (stoppingtics && st_time >= stoppingtics)
-			{
-				curplaying = NULL;
-				M_ResetJukebox();
-				
-				st_time = 0;
-			}
-			else
-			{
-				fixed_t work, bpm = curplaying->bpm;
-				angle_t ang;
-				//bpm = FixedDiv((60*TICRATE)<<FRACBITS, bpm); -- bake this in on load
+			fixed_t work, bpm = M_RandomRange(50, 100);
+			angle_t ang;
+		
+			work = st_time;
+			work %= bpm;
 
-				work = st_time;
-				work %= bpm;
+			if (st_time >= (FRACUNIT << (FRACBITS - 2))) // prevent overflow jump - takes about 15 minutes of loop on the same song to reach
+				st_time = work;
 
-				if (st_time >= (FRACUNIT << (FRACBITS - 2))) // prevent overflow jump - takes about 15 minutes of loop on the same song to reach
-					st_time = work;
+			work = FixedDiv(work*180, bpm);
+			frame[0] = 8-(work/(20<<FRACBITS));
+			if (frame[0] > 8) // VERY small likelihood for the above calculation to wrap, but it turns out it IS possible lmao
+				frame[0] = 0;
+			ang = (FixedAngle(work)>>ANGLETOFINESHIFT) & FINEMASK;
+			bounce = (FINESINE(ang) - FRACUNIT/2);
+			hscale -= bounce/16;
+			vscale += bounce/16;
 
-				work = FixedDiv(work*180, bpm);
-				frame[0] = 8-(work/(20<<FRACBITS));
-				if (frame[0] > 8) // VERY small likelihood for the above calculation to wrap, but it turns out it IS possible lmao
-					frame[0] = 0;
-				ang = (FixedAngle(work)>>ANGLETOFINESHIFT) & FINEMASK;
-				bounce = (FINESINE(ang) - FRACUNIT/2);
-				hscale -= bounce/16;
-				vscale += bounce/16;
-
-				st_time += renderdeltatics;
-			}
+			st_time += renderdeltatics;
 		}
 	}
 
 	x = 90<<FRACBITS;
 	y = (BASEVIDHEIGHT-32)<<FRACBITS;
 
-	V_DrawStretchyFixedPatch(x, y,
-		hscale, vscale,
-		0, st_radio[frame[0]], NULL);
-
+	V_DrawFixedPatch(x, y, hscale, vscale, st_radio[frame[0]], NULL); //vscale
 	V_DrawFixedPatch(x, y, FRACUNIT/2, 0, st_launchpad[0], NULL);
 
 	for (i = 0; i < 9; i++)
@@ -12769,18 +12807,9 @@ static void M_DrawTsotuumbJukebox(void)
 		static fixed_t st_scroll = -FRACUNIT;
 		const char* titl;
 		x = 16;
+		
 		V_DrawString(x, 10, 0, "NOW PLAYING:");
-
-		if (jukeboxMusicPlaying)
-		{
-			if (curplaying->alttitle[0])
-				titl = va("%s - %s - ", jukeboxMusicName, curplaying->alttitle);
-			else
-				titl = va("%s - ", jukeboxMusicName);
-		}
-		else
-			titl = "None - ";
-
+		titl = (jukeboxMusicPlaying ? va("%s - ", jukeboxMusicName) : "None - ");
 		i = V_LevelNameWidth(titl);
 
 		st_scroll += renderdeltatics;
@@ -12799,9 +12828,9 @@ static void M_DrawTsotuumbJukebox(void)
 		}
 
 		if (jukeboxMusicPlaying)
-			V_DrawRightAlignedThinString(BASEVIDWIDTH-16, 46, V_ALLOWLOWERCASE, curplaying->authors);
+			V_DrawRightAlignedThinString(BASEVIDWIDTH-16, 46, V_ALLOWLOWERCASE, curplaying->source);
 	}
-
+#endif
 	V_DrawFill(165, 60, 140, 112, 159);
 
 	{
@@ -12852,11 +12881,8 @@ static void M_DrawTsotuumbJukebox(void)
 		{
 			if (t == st_sel)
 				V_DrawFill(165, y-4, 140-1, 16, 155);
-			if (!soundtestdefs[t]->allowed)
-			{
-				V_DrawString(x, y, (t == st_sel ? V_YELLOWMAP : 0)|V_ALLOWLOWERCASE, "???");
-			}
-			else if (soundtestdefs[t] == &soundtestsfx)
+			
+			if (soundtestdefs[t] == &soundtestsfx)
 			{
 				const char *sfxstr = va("SFX %s", cv_soundtest.string);
 				V_DrawString(x, y, (t == st_sel ? V_YELLOWMAP : 0), sfxstr);
@@ -12878,7 +12904,7 @@ static void M_DrawTsotuumbJukebox(void)
 			}
 			else
 			{
-				V_DrawString(x, y, (t == st_sel ? V_YELLOWMAP : 0)|V_ALLOWLOWERCASE, soundtestdefs[t]->title);
+				V_DrawString(x, y, (t == st_sel ? V_YELLOWMAP : 0)|V_ALLOWLOWERCASE, soundtestdefs[t]->name);
 				if (curplaying == soundtestdefs[t])
 				{
 					V_DrawFill(165+140-9, y-4, 8, 16, 150);
@@ -12900,20 +12926,18 @@ static void M_HandleTsotuumbJukebox(INT32 choice)
 	{
 		case KEY_DOWNARROW:
 			if (st_sel++ >= numsoundtestdefs-1)
-				st_sel = 0;
 			{
-				cv_closedcaptioning.value = st_cc; // hack
+				st_sel = 0;
+				
 				S_StartSound(NULL, sfx_menu1);
-				cv_closedcaptioning.value = 1; // hack
 			}
 			break;
 		case KEY_UPARROW:
 			if (!st_sel--)
-				st_sel = numsoundtestdefs-1;
 			{
-				cv_closedcaptioning.value = st_cc; // hack
+				st_sel = numsoundtestdefs-1;
+
 				S_StartSound(NULL, sfx_menu1);
-				cv_closedcaptioning.value = 1; // hack
 			}
 			break;
 		case KEY_PGDN:
@@ -12922,9 +12946,7 @@ static void M_HandleTsotuumbJukebox(INT32 choice)
 				st_sel += 3;
 				if (st_sel >= numsoundtestdefs-1)
 					st_sel = numsoundtestdefs-1;
-				cv_closedcaptioning.value = st_cc; // hack
 				S_StartSound(NULL, sfx_menu1);
-				cv_closedcaptioning.value = 1; // hack
 			}
 			break;
 		case KEY_PGUP:
@@ -12933,9 +12955,7 @@ static void M_HandleTsotuumbJukebox(INT32 choice)
 				st_sel -= 3;
 				if (st_sel < 0)
 					st_sel = 0;
-				cv_closedcaptioning.value = st_cc; // hack
 				S_StartSound(NULL, sfx_menu1);
-				cv_closedcaptioning.value = 1; // hack
 			}
 			break;
 		case KEY_BACKSPACE:
@@ -12948,9 +12968,6 @@ static void M_HandleTsotuumbJukebox(INT32 choice)
 			curplaying = NULL;
 			M_ResetJukebox();
 
-			cv_closedcaptioning.value = st_cc; // hack
-			cv_closedcaptioning.value = 1; // hack
-
 			if (Playing())
 				S_ChangeMusicEx(mapheaderinfo[gamemap-1]->musname, mapmusflags, true, mapmusposition, 0, 0);
 			break;
@@ -12959,7 +12976,7 @@ static void M_HandleTsotuumbJukebox(INT32 choice)
 			break;
 
 		case KEY_RIGHTARROW:
-			if (soundtestdefs[st_sel] == &soundtestsfx && soundtestdefs[st_sel]->allowed)
+			if (soundtestdefs[st_sel] == &soundtestsfx)
 			{
 				S_StopSounds();
 				S_StopMusic();
@@ -12969,7 +12986,7 @@ static void M_HandleTsotuumbJukebox(INT32 choice)
 			}
 			break;
 		case KEY_LEFTARROW:
-			if (soundtestdefs[st_sel] == &soundtestsfx && soundtestdefs[st_sel]->allowed)
+			if (soundtestdefs[st_sel] == &soundtestsfx)
 			{
 				S_StopSounds();
 				S_StopMusic();
@@ -12979,49 +12996,41 @@ static void M_HandleTsotuumbJukebox(INT32 choice)
 			}
 			break;
 		case KEY_ENTER:
-			S_StopSounds();
-			S_StopMusic();
-			st_time = 0;
+			//S_StopSounds();
+			//S_StopMusic();
+			//st_time = 0;
 			
-			if (soundtestdefs[st_sel]->allowed)
+			if (!jukeboxMusicPlaying)
 			{
-				if (!jukeboxMusicPlaying)
+				curplaying = soundtestdefs[st_sel];
+				//CONS_Printf("%s", curplaying->name);
+				S_ChangeMusicInternal(curplaying->name, true);
+				//S_ChangeMusicInternal(jukeboxMusicTrack, true);
+				/*if (curplaying == &soundtestsfx)
 				{
-					curplaying = soundtestdefs[st_sel];
-					if (curplaying == &soundtestsfx)
-					{
-						if (cv_soundtest.value)
-							S_StartSound(NULL, cv_soundtest.value);
-					}
-					else
-					{
-						snprintf(jukeboxMusicName, 64, "%s", curplaying->title);
-						snprintf(jukeboxMusicTrack, 7, "%s", curplaying->name);
-
-						S_ChangeMusicInternal(jukeboxMusicTrack, !curplaying->stoppingtics);
-						CONS_Printf(M_GetText("Loaded track \x82%s\x80 into the Jukebox.\n"), jukeboxMusicName);
-						
-						jukeboxMusicPlaying = true;
-						initJukeboxHUD = true;
-					}
+					if (cv_soundtest.value)
+						S_StartSound(NULL, cv_soundtest.value);
 				}
 				else
 				{
-					curplaying = NULL;
-					M_ResetJukebox();
-
-					S_StopMusic();
-					S_StartSound(NULL, sfx_menu1);
+					snprintf(jukeboxMusicName, 256, "%s", curplaying->source);
+					snprintf(jukeboxMusicTrack, 7, "%s", curplaying->name);
+					
+					S_ChangeMusicInternal(jukeboxMusicTrack, true);
+					CONS_Printf(M_GetText("Loaded track \x82%s\x80 into the Jukebox.\n"), jukeboxMusicName);
+					
+					jukeboxMusicPlaying = true;
+					initJukeboxHUD = true;
 				}
+				return;*/
 			}
-			else
-			{
-				curplaying = NULL;
-				M_ResetJukebox();
-
-				S_StopMusic();
-				S_StartSound(NULL, sfx_lose);
-			}
+			
+			//curplaying = NULL;
+			//M_ResetJukebox();
+			
+			//S_StopMusic();
+			//S_StartSound(NULL, sfx_menu1);
+			
 			break;
 
 		default:
@@ -13035,7 +13044,6 @@ static void M_HandleTsotuumbJukebox(INT32 choice)
 			soundtestdefs = NULL;
 		}
 
-		cv_closedcaptioning.value = st_cc; // undo hack
 		if (currentMenu->prevMenu)
 			M_SetupNextMenu(currentMenu->prevMenu);
 		else
@@ -13050,4 +13058,3 @@ void M_ResetJukebox(void)
 	for (INT32 i = 0; jukeboxMusicName[i] != '\0'; i++) jukeboxMusicName[i] = '\0';
 	for (INT32 i = 0; jukeboxMusicTrack[i] != '\0'; i++) jukeboxMusicTrack[i] = '\0';
 }
-*/

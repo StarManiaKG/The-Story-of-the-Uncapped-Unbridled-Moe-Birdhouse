@@ -65,7 +65,9 @@ static CV_PossibleValue_t customimagetype_cons_t[] = {
 	{3, "Miscellaneous"},
 	{4, "None"},
 	{0, NULL}};
-static CV_PossibleValue_t customcharacterimage_cons_t[] = { // Characters //
+
+// Characters //
+static CV_PossibleValue_t customcharacterimage_cons_t[] = {
     // Vanilla Chars
     {0, "Default"}, //does ghost sonic count as a vanilla char? maybe.
     {1, "Sonic"},
@@ -106,8 +108,109 @@ static CV_PossibleValue_t customcharacterimage_cons_t[] = { // Characters //
 	{34, "Miku"},
 	{35, "Doom"},
     {0, NULL}};
-static CV_PossibleValue_t custommapimage_cons_t[] = {{0, "MIN"}, {69, "MAX"}, {0, NULL}};
-static CV_PossibleValue_t custommiscimage_cons_t[] = { // Miscellanious //
+
+// Maps //
+static CV_PossibleValue_t custommapimage_cons_t[] = {
+    // Singleplayer/Co-op Maps
+    {0, "GFZ1"},
+    {1, "GFZ2"},
+    {2, "GFZ3"},
+
+    {3, "THZ1"},
+    {4, "THZ2"},
+    {5, "THZ3"},
+
+    {6, "DSZ1"},
+    {7, "DSZ2"},
+    {8, "DSZ3"},
+
+    {9, "CEZ1"},
+    {10, "CEZ2"},
+    {11, "CEZ3"},
+
+    {12, "ACZ1"},
+    {13, "ACZ2"},
+    {14, "ACZ3"},
+
+    {15, "RVZ1"},
+
+    {16, "ERZ1"},
+    {17, "ERZ2"},
+
+    {18, "BCZ1"},
+    {19, "BCZ2"},
+    {20, "BCZ3"},
+
+    // Extra Maps
+    {21, "BS - FHZ"},
+    {22, "BS - PTZ"},
+    {23, "BS - FFZ"},
+    {24, "BS - TLZ"},
+
+    // Advanced Maps
+    {25, "CS - HHZ"},
+    {26, "CS - AGZ"},
+    {27, "CS - ATZ"},
+
+    // Singleplayer Special Stages
+    {28, "SSS - FFZ"},
+    {29, "SSS - TPZ"},
+    {30, "SSS - FCZ"},
+    {31, "SSS - CFZ"},
+    {32, "SSS - DWZ"},
+    {33, "SSS - MCZ"},
+    {34, "SSS - ESZ"},
+    {35, "SSS - BHZ"},
+
+    // Co-op Special Stages
+    {36, "MSS - 1"},
+    {37, "MSS - 2"},
+    {38, "MSS - 3"},
+    {39, "MSS - 4"},
+    {40, "MSS - 5"},
+    {41, "MSS - 6"},
+    {42, "MSS - 7"},
+
+    // Other Things I Probably Forgot Because I'm Smart lol
+    {43, "NBS - CCZ"},
+    {44, "NBS - DHZ"},
+    {45, "NBS - APZ1"},
+    {46, "NBS - APZ2"},
+
+    // CTF Maps
+    {47, "CTF - LFZ"},
+    {48, "CTF - LPZ"},
+    {49, "CTF - SCZ"},
+    {50, "CTF - IFZ"},
+    {51, "CTF - TTZ"},
+    {52, "CTF - CTZ"},
+    {53, "CTF - ITZ"},
+    {54, "CTF - DFZ"},
+    {55, "CTF - NRZ"},
+
+    // Match/Team Match/H&S/Tag Maps
+    {56, "MATCH - JVZ"},
+    {57, "MATCH - NFZ"},
+    {58, "MATCH - TPZ"},
+    {59, "MATCH - TCZ"},
+    {60, "MATCH - DTZ"},
+    {61, "MATCH - ICZ"},
+    {62, "MATCH - OHZ"},
+    {63, "MATCH - SFZ"},
+    {64, "MATCH - DBZ"},
+    {65, "MATCH - CSZ"},
+    {66, "MATCH - FCZ"},
+    {67, "MATCH - MMZ"},
+
+    // Tutorial Map
+    {68, "Tutorial - TZ"},
+    
+    // Custom Map
+    {69, "Custom"},
+    {0, NULL}};
+
+// Miscellanious //
+static CV_PossibleValue_t custommiscimage_cons_t[] = {
 	{0, "Default"},
 	
 	// Intro Stuff
@@ -161,8 +264,8 @@ consvar_t cv_customdiscordlargecharacterimage = {"customdiscordlargecharacterima
 consvar_t cv_customdiscordsmallcharacterimage = {"customdiscordsmallimage", "Tails", CV_SAVE|CV_CALL, customcharacterimage_cons_t, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
  
     // Maps //
-consvar_t cv_customdiscordlargemapimage = {"customdiscordlargemapimage", "MIN", CV_SAVE|CV_CALL, custommapimage_cons_t, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
-consvar_t cv_customdiscordsmallmapimage = {"customdiscordsmallmapimage", "MAX", CV_SAVE|CV_CALL, custommapimage_cons_t, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_customdiscordlargemapimage = {"customdiscordlargemapimage", "GFZ1", CV_SAVE|CV_CALL, custommapimage_cons_t, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
+consvar_t cv_customdiscordsmallmapimage = {"customdiscordsmallmapimage", "GFZ2", CV_SAVE|CV_CALL, custommapimage_cons_t, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
  
     // Miscellanious //
 consvar_t cv_customdiscordlargemiscimage = {"customdiscordlargemiscimage", "Default", CV_SAVE|CV_CALL, custommiscimage_cons_t, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
@@ -176,7 +279,7 @@ struct discordInfo_s discordInfo;
 
 discordRequest_t *discordRequestList = NULL;
 
-static char self_ip[IP_SIZE];
+static char self_ip[IP_SIZE+1];
 
 /*--------------------------------------------------
 	static char *DRPC_XORIPString(const char *input)
@@ -891,10 +994,10 @@ void DRPC_UpdatePresence(void)
 			{
 				// Modes //
 				snprintf(gametypeGrammar, 20, "Playing ");
-				snprintf(gameType, 24, ((modeattacking) ? "Time Attack" : "%s%s%s"), ((modeattacking) ? NULL : 
-																						(gametype_cons_t[gametype].strvalue, 
-																						((gametype == GT_RACE) ? va(" | %s", kartspeed_cons_t[gamespeed].strvalue) : NULL),
-																						((encoremode) ? " | Encore" : ""))));
+				snprintf(gameType, 24, (modeattacking ? "Time Attack" : "%s%s%s"),
+					(modeattacking ? "" : gametype_cons_t[gametype].strvalue), 
+					(gametype == GT_RACE ? va(" | %s", kartspeed_cons_t[gamespeed].strvalue) : ""),
+					(encoremode ? " | Encore" : ""));
 				
 				// Mods //
 				if (modifiedgame && numwadfiles > (mainwads+1))

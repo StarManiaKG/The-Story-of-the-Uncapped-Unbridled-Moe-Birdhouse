@@ -142,8 +142,8 @@ extern char  logfilename[1024];
 #ifdef DEVELOP
 #define VERSION    0 // Game version
 #define SUBVERSION 0 // more precise version number
-#define VERSIONSTRING "TSOTUUMB Development EXE"
-#define VERSIONSTRINGW L"TSOTUUMB Development EXE"
+#define VERSIONSTRING "TSOTUUMB Kart v1.6 (Made By StarManiaKG#4884) Development EXE"
+#define VERSIONSTRINGW L"TSOTUUMB Kart v1.6 (Made By StarManiaKG#4884) Development EXE"
 // most interface strings are ignored in development mode.
 // we use comprevision and compbranch instead.
 #else

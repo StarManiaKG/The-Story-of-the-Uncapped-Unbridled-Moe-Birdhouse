@@ -281,8 +281,10 @@ extern char customLImageString[3+17+10+2]; //Pointer for the name of the custom 
 #endif
 
 //star stuff weeeeee
+extern consvar_t cv_jukeboxhud;
+
 extern boolean jukeboxMusicPlaying;
-extern char jukeboxMusicName[32+20+12];
+extern char jukeboxMusicName[255];
 extern char jukeboxMusicTrack[7];
 void M_ResetJukebox(void);
 

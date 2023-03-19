@@ -61,6 +61,10 @@ void ST_doPaletteStuff(void);
 // return if player a is in the same team as player b
 boolean ST_SameTeam(player_t *a, player_t *b);
 
+// Star stuff i guess
+extern boolean initJukeboxHUD;
+void ST_drawJukebox(void);
+
 //--------------------
 // status bar overlay
 //--------------------

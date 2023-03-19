@@ -148,11 +148,16 @@ extern struct cursongcredit
 	UINT8 trans;
 } cursongcredit;
 
+extern musicdef_t soundtestsfx;
 extern musicdef_t *musicdefstart;
+extern musicdef_t **soundtestdefs;
+extern INT32 numsoundtestdefs;
 
 void S_LoadMusicDefs(UINT16 wadnum);
 void S_InitMusicDefs(void);
 void S_ShowMusicCredit(void);
+
+boolean S_PrepareSoundTest(void);
 
 //
 // Music Seeking

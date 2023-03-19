@@ -59,7 +59,7 @@
 #ifdef USE_PATCH_KART
 #define ASSET_HASH_PATCH_KART    "00000000000000000000000000000000"
 #endif
-#define ASSET_HASH_TSOTUUMB_KART  "61816b44cc8f7b0fabb3737e28b3bbfc"
+#define ASSET_HASH_TSOTUUMB_KART "96fccf17a02b1d460a2c127970cd8a42"
 
 #endif
 #endif //config.h or something lol

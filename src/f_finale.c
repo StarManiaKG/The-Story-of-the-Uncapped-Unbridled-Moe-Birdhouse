@@ -33,6 +33,7 @@
 #include "m_random.h"
 #include "y_inter.h"
 #include "m_cond.h"
+#include "st_stuff.h"
 
 // Stage of animation:
 // 0 = text, 1 = art screen
@@ -1009,6 +1010,9 @@ void F_TitleScreenDrawer(void)
 
 		V_DrawSmallScaledPatch(84, 36, transval<<V_ALPHASHIFT, ttkflash);
 	}
+
+	// STAR stuff lol
+	ST_drawJukebox(); // show us the music we're playing in the jukebox, if we are playing anything
 }
 
 // (no longer) De-Demo'd Title Screen

@@ -1874,6 +1874,8 @@ static INT32 spectatedelay, spectatedelay2, spectatedelay3, spectatedelay4 = 0;
 // G_Responder
 // Get info needed to make ticcmd_ts for the players.
 //
+boolean TSOTUMMBWarning;
+
 boolean G_Responder(event_t *ev)
 {
 	// any other key pops up menu if in demos
@@ -2399,6 +2401,8 @@ void G_ResetViews(void)
 // G_Ticker
 // Make ticcmd_ts for the players.
 //
+boolean TSOTUUMBWarning = false;
+
 void G_Ticker(boolean run)
 {
 	UINT32 i;
@@ -2542,8 +2546,16 @@ void G_Ticker(boolean run)
 			break;
 
 		case GS_TITLESCREEN:
+		{
 			F_TitleScreenTicker(run);
+
+			if (!TSOTUUMBWarning)
+			{
+				M_StartMessage(M_GetText("This is a Relatively Stable Build of TSOTUUMB Kart.\nBut for the love of God,\nDo Not Look At The Jukebox."), NULL, MM_NOTHING);
+				TSOTUUMBWarning = true;
+			}
 			break;
+		}
 		case GS_WAITINGPLAYERS:
 			if (netgame)
 				F_WaitingPlayersTicker();

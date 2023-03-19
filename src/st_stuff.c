@@ -2079,6 +2079,9 @@ static void ST_overlayDrawer(void)
 			break;
 		}
 	}
+
+	// STAR stuff lol
+	ST_drawJukebox(); // show us the music we're playing in the jukebox, if we are playing anything
 }
 
 void ST_DrawDemoTitleEntry(void)
@@ -2137,6 +2140,61 @@ void ST_AskToJoinEnvelope(void)
 	// maybe draw number of requests with V_DrawPingNum ?
 }
 #endif
+
+// STAR SECTION //
+//
+// Draws Jukebox Text On The Screen/HUD
+//
+boolean initJukeboxHUD;
+INT32 chosenColor;
+
+INT32 boxw = 300; // Slides our Filed Box to Width 245
+INT32 strw = 300; // Slides our Regular String to Width 230
+INT32 tstrw = 300; // Slides our Thin String to Width 195
+
+void ST_drawJukebox(void)
+{
+	if (cv_jukeboxhud.value)
+	{
+		if (jukeboxMusicPlaying)
+		{
+			if (initJukeboxHUD)
+			{
+				if (chosenColor < 0)
+					chosenColor = M_RandomRange(0, MAXSKINCOLORS);
+
+				if (boxw != 245)
+					boxw -= 5;
+
+				if (strw != 230)
+					strw -= 5;
+
+				if (tstrw != 195)
+					tstrw -= 5;
+
+				if (boxw == 245 && strw == 230 && tstrw == 195)
+					initJukeboxHUD = false;
+			}
+
+			V_DrawFillConsoleMap(boxw, 45, 130, 25, V_HUDTRANSHALF|chosenColor);
+			
+			V_DrawString(strw, 45, V_SNAPTORIGHT|V_ALLOWLOWERCASE, "JUKEBOX");
+			V_DrawThinString(tstrw, 60, V_SNAPTORIGHT|V_ALLOWLOWERCASE|V_YELLOWMAP, va("PLAYING: %s", jukeboxMusicName));
+		}
+		else
+		{
+			boxw = strw = tstrw = 300;
+			chosenColor = -1;
+		}
+	}
+	else
+	{
+		boxw = strw = tstrw = 300;
+		chosenColor = -1;
+	}
+}
+
+// END OF STAR SECTION //
 
 void ST_Drawer(void)
 {
