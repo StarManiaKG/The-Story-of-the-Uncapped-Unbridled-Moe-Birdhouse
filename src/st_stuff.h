@@ -137,4 +137,8 @@ extern hudinfo_t hudinfo[NUMHUDITEMS];
 
 extern UINT16 objectsdrawn;
 
+// STAR Stuff lol
+void ST_drawJukebox(void);
+extern boolean initJukeboxHUD;
+
 #endif

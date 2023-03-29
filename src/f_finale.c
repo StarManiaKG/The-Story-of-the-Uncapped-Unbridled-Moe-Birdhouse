@@ -246,7 +246,9 @@ void F_StartIntro(void)
 	finalecount = animtimer = stoptimer = 0;
 	roidtics = BASEVIDWIDTH - 64;
 	timetonext = introscenetime[intro_scenenum];
-	S_StopMusic();
+
+	if (!jukeboxMusicPlaying)
+		S_StopMusic();
 }
 
 //
@@ -942,7 +944,7 @@ void F_StartTitleScreen(void)
 	// IWAD dependent stuff.
 
 	// music is started in the ticker
-	if (!demo.fromtitle) // SRB2Kart: Don't reset music if the right track is already playing
+	if (!demo.fromtitle && !jukeboxMusicPlaying) // SRB2Kart: Don't reset music if the right track is already playing
 		S_StopMusic();
 	demo.fromtitle = false;
 
@@ -955,6 +957,9 @@ void F_StartTitleScreen(void)
 	ttkart = W_CachePatchName("TTKART", PU_LEVEL);
 	ttcheckers = W_CachePatchName("TTCHECK", PU_LEVEL);
 	ttkflash = W_CachePatchName("TTKFLASH", PU_LEVEL);
+
+	// STAR stuff lol
+	ST_drawJukebox(); // show us the music we're playing in the jukebox, if we are playing anything
 }
 
 // (no longer) De-Demo'd Title Screen
@@ -1010,9 +1015,6 @@ void F_TitleScreenDrawer(void)
 
 		V_DrawSmallScaledPatch(84, 36, transval<<V_ALPHASHIFT, ttkflash);
 	}
-
-	// STAR stuff lol
-	ST_drawJukebox(); // show us the music we're playing in the jukebox, if we are playing anything
 }
 
 // (no longer) De-Demo'd Title Screen
@@ -1436,7 +1438,10 @@ void F_StartCustomCutscene(INT32 cutscenenum, boolean precutscene, boolean reset
 			cutscenes[cutnum]->scene[0].musicloop,
 			cutscenes[cutnum]->scene[scenenum].musswitchposition, 0, 0);
 	else
-		S_StopMusic();
+	{
+		if (!jukeboxMusicPlaying)
+			S_StopMusic();
+	}
 }
 
 //

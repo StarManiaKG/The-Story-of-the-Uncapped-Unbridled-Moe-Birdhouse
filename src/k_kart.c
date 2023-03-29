@@ -20,6 +20,7 @@
 #include "m_cond.h"
 #include "k_kart.h"
 #include "f_finale.h"
+#include "m_menu.h" // For Jukeboxing
 #include "lua_hud.h"	// For Lua hud checks
 #include "lua_hook.h"	// For MobjDamage and ShouldDamage
 
@@ -6040,7 +6041,9 @@ void K_MoveKartPlayer(player_t *player, boolean onground)
 		if (leveltime == starttime)
 		{
 			S_StartSound(NULL, sfx_s3kad);
-			S_StopMusic(); // The GO! sound stops the level start ambience
+			
+			if (!jukeboxMusicPlaying)
+				S_StopMusic(); // The GO! sound stops the level start ambience
 		}
 	}
 

@@ -20,6 +20,7 @@
 #include "s_sound.h"
 #include "m_random.h"
 #include "m_misc.h"
+#include "m_menu.h" // Jukeboxing
 #include "r_things.h"
 #include "i_video.h"
 #include "lua_hook.h"
@@ -3077,7 +3078,8 @@ void A_Invincibility(mobj_t *actor)
 
 	if (P_IsLocalPlayer(player) && !player->powers[pw_super])
 	{
-		S_StopMusic();
+		if (!jukeboxMusicPlaying)
+			S_StopMusic();
 		if (mariomode)
 			G_GhostAddColor((INT32) (player - players), GHC_INVINCIBLE);
 		S_ChangeMusicInternal((mariomode) ? "minvnc" : "invinc", false);
@@ -3115,7 +3117,8 @@ void A_SuperSneakers(mobj_t *actor)
 			S_SpeedMusic(1.4f);
 		else
 		{
-			S_StopMusic();
+			if (!jukeboxMusicPlaying)
+				S_StopMusic();
 			S_ChangeMusicInternal("shoes", false);
 		}
 	}

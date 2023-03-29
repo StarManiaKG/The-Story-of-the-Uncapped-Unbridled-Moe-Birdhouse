@@ -26,6 +26,7 @@
 #include "r_main.h"
 #include "r_fps.h"
 #include "i_video.h" // rendermode
+#include "i_system.h" // I_CursedWindowMovement
 
 // Object place
 #include "m_cheat.h"

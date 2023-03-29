@@ -25,6 +25,7 @@
 #include "m_cond.h" // unlockables, emblems, etc
 #include "m_cheat.h" // objectplace
 #include "m_misc.h"
+#include "m_menu.h" // Jukeboxing
 #include "v_video.h" // video flags for CEchos
 #include "k_kart.h" // SRB2kart
 
@@ -2340,7 +2341,8 @@ void P_KillMobj(mobj_t *target, mobj_t *inflictor, mobj_t *source)
 			{
 				if (P_IsLocalPlayer(target->player)/* && target->player == &players[consoleplayer] */)
 				{
-					S_StopMusic(); // Stop the Music! Tails 03-14-2000
+					if (!jukeboxMusicPlaying)
+						S_StopMusic(); // Stop the Music! Tails 03-14-2000
 					S_ChangeMusicInternal("gmover", false); // Yousa dead now, Okieday? Tails 03-14-2000
 				}
 			}

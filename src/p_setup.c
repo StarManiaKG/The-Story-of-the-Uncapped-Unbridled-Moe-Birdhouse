@@ -2889,7 +2889,8 @@ boolean P_SetupLevel(boolean skipprecip)
 
 		if (rendermode != render_none)
 		{
-			S_StopMusic(); // er, about that...
+			if (!jukeboxMusicPlaying)
+				S_StopMusic(); // er, about that...
 
 			S_StartSound(NULL, sfx_ruby1);
 

@@ -142,15 +142,15 @@ extern char  logfilename[1024];
 #ifdef DEVELOP
 #define VERSION    0 // Game version
 #define SUBVERSION 0 // more precise version number
-#define VERSIONSTRING "TSOTUUMB Kart v1.6 (Made By StarManiaKG#4884) Development EXE"
-#define VERSIONSTRINGW L"TSOTUUMB Kart v1.6 (Made By StarManiaKG#4884) Development EXE"
+#define VERSIONSTRING "TSOTUUMB Kart (Made By StarManiaKG#4884) Development EXE" // Fun Fact: This Was Originally Called Speccy Kart, Because it Was Originally Made for Speccy lol
+#define VERSIONSTRINGW L"TSOTUUMB Kart (Made By StarManiaKG#4884) Development EXE" // Fun Fact 2: The Above
 // most interface strings are ignored in development mode.
 // we use comprevision and compbranch instead.
 #else
 #define VERSION    1 // Game version
 #define SUBVERSION 6 // more precise version number
-#define VERSIONSTRING "TSOTUUMB Kart v1.6 (Made By StarManiaKG#4884)" //(Originally Called Speccy Kart, Originally Made for Speccy) for those wanting to compile my build, you can change this to have a custom name, for example, speecy kart, or starmaniakg kart or something like that
-#define VERSIONSTRINGW L"v1.6"
+#define VERSIONSTRING "TSOTUUMB Kart (Made By StarManiaKG#4884)" // for those wanting to compile my build, you can change this to have a custom name, for example, speecy kart, or starmaniakg kart or something like that
+#define VERSIONSTRINGW L"TSOTUUMB Kart (Made By StarManiaKG#4884)" // the above
 // Hey! If you change this, add 1 to the MODVERSION below! Otherwise we can't force updates!
 // And change CMakeLists.txt (not src/, but in root), for CMake users!
 // AND appveyor.yml, for the build bots!
@@ -642,9 +642,6 @@ extern const char *compdate, *comptime, *comprevision, *compbranch;
 
 /// SRB2Kart: Camera always has noclip.
 #define NOCLIPCAM
-
-/// SRB2Kart: MIDI support is shitty and busted and we don't want it, lets throw it behind a define
-#define NO_MIDI
 
 /// FINALLY some real clipping that doesn't make walls dissappear AND speeds the game up
 /// (that was the original comment from SRB2CB, sadly it is a lie and actually slows game down)

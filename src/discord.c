@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 2018-2020 by Sally "TehRealSalt" Cochenour.
 // Copyright (C) 2018-2020 by Kart Krew.
-// Copyright (C) 2023 by StarManiaKG
+// Copyright (C) 2023 by Star "I Make My Own Copyrights" ManiaKG.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -21,22 +21,26 @@
 #include "i_net.h"
 #include "g_game.h"
 #include "p_tick.h"
-#include "m_menu.h" // gametype_cons_t and discord custom string pointers and jukebox stuff and things like that
+#include "m_menu.h" // gametype_cons_t and jukebox stuff
 #include "r_things.h" // skins
-#include "mserv.h" // cv_advertise and ms_RoomID
-#include "m_cond.h" // queries about emblems
+#include "mserv.h" // cv_advertise
 #include "p_local.h" // stplyr
 #include "z_zone.h"
 #include "byteptr.h"
 #include "stun.h"
 #include "i_tcp.h" // current_port
-#include "discord.h" // duh
+
+#include "discord.h"
+#include "doomdef.h"
+
+#include "m_cond.h" // queries about emblems
+#include "v_video.h" // hud stuff, mainly
+
 #include "w_wad.h" // numwadfiles
+#include "d_main.h" // extrawads
 #include "d_netfil.h" // nameonly
 #include "doomstat.h" // savemoddata
 #include "dehacked.h" // titlechanged
-#include "v_video.h" // hud rendering options
-#include "doomdef.h"
 
 // Please feel free to provide your own Discord app if you're making a new custom build :)
 #define DISCORD_APPID "503531144395096085"
@@ -55,9 +59,16 @@ static CV_PossibleValue_t statustype_cons_t[] = {
     {6, "Only Playtime"},
     {7, "Custom"},
     {0, NULL}};
-static CV_PossibleValue_t characterimagetype_cons_t[] = {{0, "CS Portrait"}, {1, "Continue Sprite"}, {0, NULL}}; //{2, "Life Icon Sprite"},
 
-// Custom Discord Status Image Type //
+//// Custom Status and Images ////
+// Character Image Types //
+static CV_PossibleValue_t characterimagetype_cons_t[] = {
+	{0, "CS Portrait"},
+	{1, "Continue Sprite"},
+	{2, "Life Icon Sprite"},
+	{0, NULL}};
+
+// All Image Types //
 static CV_PossibleValue_t customimagetype_cons_t[] = {
 	{0, "CS Portraits"},
 	{1, "Continue Sprites"},
@@ -240,7 +251,7 @@ static CV_PossibleValue_t custommiscimage_cons_t[] = {
 	*/
 	{0, NULL}};
 
-                                                 ////////////////////////////
+                                                ////////////////////////////
                                                 //    Discord Commands    //
                                                 ////////////////////////////
 consvar_t cv_discordrp = {"discordrp", "On", CV_SAVE|CV_CALL, CV_OnOff, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
@@ -275,11 +286,12 @@ consvar_t cv_customdiscordsmallmiscimage = {"customdiscordsmallmiscimage", "Intr
 consvar_t cv_customdiscordlargeimagetext = {"customdiscordlargeimagetext", "My Favorite Go-Kart!", CV_SAVE|CV_CALL, NULL, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_customdiscordsmallimagetext = {"customdiscordsmallimagetext", "My Other Favorite Go-Kart!", CV_SAVE|CV_CALL, NULL, Discord_option_Onchange, 0, NULL, NULL, 0, 0, NULL};
 
-struct discordInfo_s discordInfo;
-
+struct discordInfo_s discordInfo; // Dedicated Server Safety Crew
 discordRequest_t *discordRequestList = NULL;
 
-static char self_ip[IP_SIZE+1];
+char discordUserName[64] = "  ";
+
+static char self_ip[IP_SIZE];
 
 /*--------------------------------------------------
 	static char *DRPC_XORIPString(const char *input)
@@ -287,6 +299,9 @@ static char self_ip[IP_SIZE+1];
 		Simple XOR encryption/decryption. Not complex or
 		very secretive because we aren't sending anything
 		that isn't easily accessible via our Master Server anyway.
+
+	Input Arguments:-
+		input - Struct that will be used to make an XOR IP String.
 --------------------------------------------------*/
 static char *DRPC_XORIPString(const char *input)
 {
@@ -297,7 +312,7 @@ static char *DRPC_XORIPString(const char *input)
 	for (i = 0; i < IP_SIZE; i++)
 	{
 		char xorinput;
-	
+
 		if (!input[i])
 			break;
 
@@ -308,6 +323,7 @@ static char *DRPC_XORIPString(const char *input)
 
 		output[i] = xorinput;
 	}
+
 	output[i] = '\0';
 
 	return output;
@@ -324,11 +340,14 @@ static char *DRPC_XORIPString(const char *input)
 	Return:-
 		None
 --------------------------------------------------*/
-char discordUserName[64] = "None";
 static void DRPC_HandleReady(const DiscordUser *user)
 {
-	snprintf(discordUserName, 64, "%s", user->username);
-	(cv_discordstreamer.value ? CONS_Printf("Discord: connected to %s\n", user->username) : CONS_Printf("Discord: connected to %s#%s (%s)\n", user->username, user->discriminator, user->userId));
+	// Streamer Mode Enabled
+	(cv_discordstreamer.value ?
+		(CONS_Printf("Discord: connected to %s\n", user->username), strcpy(discordUserName, user->username)) :
+	
+	// Streamer Mode Disabled
+	(CONS_Printf("Discord: connected to %s#%s (%s)\n", user->username, user->discriminator, user->userId), strcpy(discordUserName, va("%s%s", user->username, user->discriminator))));
 }
 
 /*--------------------------------------------------
@@ -345,8 +364,8 @@ static void DRPC_HandleReady(const DiscordUser *user)
 --------------------------------------------------*/
 static void DRPC_HandleDisconnect(int err, const char *msg)
 {
-	snprintf(discordUserName, 2, " ");
 	CONS_Printf("Discord: disconnected (%d: %s)\n", err, msg);
+	strcpy(discordUserName, " ");
 }
 
 /*--------------------------------------------------
@@ -381,13 +400,15 @@ static void DRPC_HandleError(int err, const char *msg)
 --------------------------------------------------*/
 static void DRPC_HandleJoin(const char *secret)
 {
-	CONS_Printf("Connecting to %s via Discord\n", DRPC_XORIPString(secret));
+	char *ip = DRPC_XORIPString(secret);
+	CONS_Printf("Connecting to %s via Discord\n", ip);
 
-	M_ClearMenus(true); // Don't have menus open during connection screen
+	M_ClearMenus(true); 			// Don't have menus open during connection screen
 	if (demo.playback && demo.title)
-		G_CheckDemoStatus(); // Stop the title demo, so that the connect command doesn't error if a demo is playing
+		G_CheckDemoStatus(); 		// Stop the title demo, so that the connect command doesn't error if a demo is playing
 
-	COM_BufAddText(va("connect \"%s\"\n", DRPC_XORIPString(secret)));
+	COM_BufAddText(va("connect \"%s\"\n", ip));
+	free(ip);
 }
 
 /*--------------------------------------------------
@@ -404,19 +425,16 @@ static void DRPC_HandleJoin(const char *secret)
 --------------------------------------------------*/
 static boolean DRPC_InvitesAreAllowed(void)
 {
-	if (!cv_discordasks.value)
-		return false; // Client Doesn't Allow Ask to Join
-
-	if (discordInfo.whoCanInvite > 1)
-		return false; // Client has the CVar set to off, so never allow invites from this client.
-
 	if (!Playing())
-		return false; // We're not playing, so we should not be getting invites.
+		return false;  				// We're Not Playing, So No Invites Should Be Sent.
+	if (!cv_discordasks.value)
+		return false;				// Client Doesn't Allow Ask to Join.
 	
-	if (discordInfo.joinsAllowed || cv_allownewplayer.value) //hack, since discordInfo.joinsAllowed doesn't work
+	if (cv_allownewplayer.value) 	// Are We Allowing Players to join the Server?
 	{
-		if ((!discordInfo.whoCanInvite && (consoleplayer == serverplayer || IsPlayerAdmin(consoleplayer))) // Only admins are allowed!
-			|| (discordInfo.whoCanInvite)) // Everyone's allowed!
+		if ((!cv_discordinvites.value && (consoleplayer == serverplayer || IsPlayerAdmin(consoleplayer))) 	// Only Admins are Allowed!
+			|| (cv_discordinvites.value == 2 && consoleplayer == serverplayer)							  	// Only the Server Player is Allowed!
+			|| (cv_discordinvites.value == 1)) 														   		// Everyone's allowed!
 			return true;
 	}
 
@@ -441,9 +459,9 @@ static void DRPC_HandleJoinRequest(const DiscordUser *requestUser)
 	discordRequest_t *append = discordRequestList;
 	discordRequest_t *newRequest;
 
-	// Something weird happened if this occurred...
-	if (!DRPC_InvitesAreAllowed())
+	if (DRPC_InvitesAreAllowed() == false)
 	{
+		// Something weird happened if this occurred...
 		Discord_Respond(requestUser->userId, DISCORD_REPLY_IGNORE);
 		return;
 	}
@@ -522,6 +540,9 @@ void DRPC_RemoveRequest(discordRequest_t *removeRequest)
 	void DRPC_Init(void)
 
 		See header file for description.
+
+	Input Arguments:-
+		None
 --------------------------------------------------*/
 void DRPC_Init(void)
 {
@@ -577,8 +598,7 @@ static const char *DRPC_GetServerIP(void)
 		{
 			// We're not the server, so we could successfully get the IP!
 			// No need to do anything else :)
-			sprintf(self_ip, "%s:%u", address, current_port);
-			return self_ip;
+			return address;
 		}
 	}
 
@@ -597,6 +617,9 @@ static const char *DRPC_GetServerIP(void)
 
 		Empties the request list. Any existing requests
 		will get an ignore reply.
+
+	Input Arguments:-
+		None
 --------------------------------------------------*/
 static void DRPC_EmptyRequests(void)
 {
@@ -611,14 +634,17 @@ static void DRPC_EmptyRequests(void)
 	void DRPC_UpdatePresence(void)
 
 		See header file for description.
+
+	Input Arguments:-
+		None
 --------------------------------------------------*/
-// Dependancies //
+//////// 	  DEPENDANCIES 	 	////////
 boolean customStringTooLow;
 boolean alreadyWarned;
 
-static void DRPC_StringError(void) // Prints a Message if
+static void DRPC_StringError(void) // Prints a Message if Your Discord RPC Strings Are Two Small (...Get It?)
 {
-	if (cv_discordrp.value && cv_discordshowonstatus.value == 7)
+	if (cv_discordrp.value && cv_discordshowonstatus.value == 8)
 	{
 		if (!discordMenuOpen && !Playing())
 			alreadyWarned = customStringTooLow = false;
@@ -638,19 +664,30 @@ static void DRPC_StringError(void) // Prints a Message if
 	}
 }
 
-// Main //
+//////// 	  MAIN 	 	////////
 void DRPC_UpdatePresence(void)
 {
-	char detailstr[64+26+15+23] = "";
+	////// 	  DECLARE VARS 	 //////
+	char detailstr[64+26+17+23] = "";
 	char statestr[64+26+15+25] = "";
+
+	char simagestr[30+26+8] = "";
+	char simagetxtstr[22+26+16] = "";
+
+	char imagestr[28+24+12] = "";
+	char imagetxtstr[18+34+12] = "";
 
 	char mapimg[8+1] = "";
 	char mapname[5+21+21+2+1] = "";
 
-	char charimg[4+SKINNAMESIZE+1] = "";
-	char charimgS[4+SKINNAMESIZE+1] = "";
-	char charname[11+SKINNAMESIZE+1] = "";
+	char charimgS[4+SKINNAMESIZE+7] = "";
+	char charimg[7+SKINNAMESIZE+4] = "";
+
 	char charnameS[11+SKINNAMESIZE+1] = "";
+	char charname[11+SKINNAMESIZE+1] = "";
+
+	char customSImage[32+18] = "";
+	char customLImage[35+7+8] = "";
 
 	char servertype[15+10] = "";
 
@@ -669,12 +706,10 @@ void DRPC_UpdatePresence(void)
 	char gametypeGrammar[2+3+1+9] = "";
 	char gameType[2+3+8+9] = "";
 
-	char customSImage[32+18] = "";
-	char customLImage[35+7+8] = "";
-
 	char charImageType[2+2+1] = "";
+	// end of nerd emojis
 
-	static const char *supportedSkins[] = { // Supported Skin Pictures
+	static const char *supportedSkins[] = {
 		// Vanilla
 		"custom"
 		"sonic",
@@ -829,6 +864,7 @@ void DRPC_UpdatePresence(void)
 		"altsonicimage2",
 		"altsonicimage3",
 		"altsonicimage4",
+		"altsonicimage5",
 		
 		// Tails
 		"alttailsimage1",
@@ -856,135 +892,148 @@ void DRPC_UpdatePresence(void)
 	static const char *customStringType[] = {
 		"char",
 		"cont",
+		"life",
+
 		"map",
 		"misc",
 		NULL
 	};
-	
-	// Iterators
-	INT32 i;
+
+	/*static const char *customStringLink[] = {
+		// Statuses
+		"#s",
+		"#j",
+		"#t",
+		"#e",
+		"#m",
+		NULL
+	};*/
+
+	// Counters
+	INT32 checkSkin = 0; 		// Checks Through The Consoleplayer's Skin
+	INT32 checkSideSkin = 0; 	// Checks Through The Seconddary Display Player's Skin
 
 	// Booleans
+#ifdef DEVELOP
+	boolean devmode = true;
+#else
+	boolean devmode = false;
+#endif
+
 	boolean joinSecretSet = false;
 
+	////// 	  INITIALIZE 	 //////
 	DiscordRichPresence discordPresence;
 	memset(&discordPresence, 0, sizeof(discordPresence));
 
-	//// NO STATUS? ////
-	if (!cv_discordrp.value)
+	////// 	  DEDICATED SERVER ONE LINER 	 //////
+	if (dedicated)
+		return; 	// Sorry Boss, That's As Far As You're Going.
+
+	////// 	  DEVMODE/NO STATUS? 	 //////
+	if (!cv_discordrp.value || devmode)
 	{
 		// Since The User Doesn't Want To Show Their Status, This Just Shows That They're Playing SRB2. (If that's too much, then they should just disable game activity :V)
-		// However, Now it also shows a few predetermined states, thanks to Star :)
-		discordPresence.largeImageKey = "misctitle";
-		discordPresence.largeImageText = "Sonic Robo Blast 2";
-		discordPresence.details = "In Game";
-		discordPresence.state = (paused ? "Currently Paused" : ((menuactive || !Playing() ? "In The Menu" : "Actively Playing")));
+		// However, Now it also shows a few predetermined states, based on whether you have Discord RPC off or have enabled the DEVELOP flag, thanks to Star :)
+		discordPresence.largeImageKey = (devmode ? "mapcustom" : "misctitle");
+		discordPresence.largeImageText = (devmode ? "Hey! No Peeking!" : "Sonic Robo Blast 2 Kart");
+		
+		discordPresence.details = (devmode ? "Developing a Masterpiece" : "In Game");
+		discordPresence.state = (devmode ? "Keep your Eyes Peeled!" : (paused ? "Currently Paused" : ((menuactive || !Playing() ? "In The Menu" : "Actively Playing"))));
 
 		DRPC_EmptyRequests();
-		Discord_RunCallbacks();
 		Discord_UpdatePresence(&discordPresence);
 		return;
 	}
-
-#ifdef DEVELOP
-	// This way, we can use the invite feature in-dev, but not have snoopers seeing any potential secrets :P
-	discordPresence.largeImageKey = "miscdevelop";
-	discordPresence.largeImageText = "No peeking!";
-	discordPresence.details = "Developing a Masterpiece!";
-	discordPresence.state = "Keep your Eyes Peeled!";
-	
-	DRPC_EmptyRequests();
-	Discord_RunCallbacks();
-	Discord_UpdatePresence(&discordPresence);
-	return;
-#endif // DEVELOP
-
-	// Reset Discord Info/Presence for Clients Compiled Without HAVE_DISCORDRPC, so You Never Receieve Bad Information From Other Players!
-    memset(&discordInfo, 0, sizeof(discordInfo));
 	
 	////////////////////////////////////////////
 	////   Main Rich Presence Status Info   ////
 	////////////////////////////////////////////
-	if (dedicated || netgame || splitscreen || !multiplayer)
+	//////// ALL GAME INFO ////////
+	////// 	  SERVER INFO 	 //////
+	if (netgame)
 	{
-		//// SERVER INFO ////
-		if ((dedicated || netgame) && Playing())
+		if (DRPC_InvitesAreAllowed() == true)
 		{
-			if (DRPC_InvitesAreAllowed())
+			const char *join;
+
+			// Grab the host's IP for joining.
+			if ((join = DRPC_GetServerIP()) != NULL)
 			{
-				const char *join;
-
-				// Grab the host's IP for joining.
-				if ((join = DRPC_GetServerIP()))
-				{
-					discordPresence.joinSecret = DRPC_XORIPString(join);
-					joinSecretSet = true;
-				}
+				discordPresence.joinSecret = DRPC_XORIPString(join);
+				joinSecretSet = true;
 			}
-
-			snprintf(servertype, 26, (cv_advertise.value ? "Public" : "Private"));
-			if (cv_discordshowonstatus.value != 7)
-				snprintf(detailstr, 60, (server ? (!dedicated ? "Hosting a %s Server" : "Hosting a Dedicated %s Server") : "In a %s Server"), servertype);
-			
-			discordPresence.partyId = server_context; // Thanks, whoever gave us Mumble support, for implementing the EXACT thing Discord wanted for this field!
-			discordPresence.partySize = D_NumPlayers(); // Players in server
-			discordPresence.partyMax = cv_maxplayers.value; // Max players
-			discordPresence.instance = 1;
 		}
-		
-		//// OTHER INFO ////
-		//// Status Pictures ////
+
+		snprintf(servertype, 26, (cv_advertise.value ? "Public" : "Private"));
 		if (cv_discordshowonstatus.value != 7)
+			snprintf(detailstr, 60, (Playing() ? (server ? "Hosting a %s Server" : "In a %s Server") : "Looking for a Server"), servertype);
+			
+		discordPresence.partyId = server_context; 		   // Thanks, whoever gave us Mumble support, for implementing the EXACT thing Discord wanted for this field!
+		discordPresence.partySize = D_NumPlayers(); 	   // Current Amount of Players in the Server
+		discordPresence.partyMax = cv_maxplayers.value;    // Max Players
+		discordPresence.instance = 1;					   // Initialize Discord Net Instance, Just In Case
+	}
+	else
+		memset(&discordInfo, 0, sizeof(discordInfo));
+
+	//// 	  STATUSES 		////
+	if (cv_discordshowonstatus.value != 7)
+	{
+		//// Status Pictures ////
+		if ((!Playing() || gamestate == GS_NULL || gamestate == GS_TIMEATTACK) || ((!Playing() || gamestate == GS_NULL || gamestate == GS_TIMEATTACK) && (cv_discordshowonstatus.value != 1 && cv_discordshowonstatus.value != 5)) || (cv_discordshowonstatus.value >= 2 && cv_discordshowonstatus.value != 5))
 		{
-			if (!Playing())
-			{
-				discordPresence.largeImageKey = "misctitle";
-				discordPresence.largeImageText = (!cv_discordshowonstatus.value ? "Title Screen" : "Sonic Robo Blast 2 Kart");
-				snprintf((cv_discordshowonstatus.value == 6 ? detailstr : statestr), 25, ((!demo.playback && !demo.title) ? "Main Menu" : ((demo.playback && !demo.title) ? "Watching Replays" : ((demo.playback && demo.title) ? "Watching A Demo" : "???"))));
-			}
-			else if (((cv_discordshowonstatus.value == 1 || cv_discordshowonstatus.value == 5) && !Playing()) || (cv_discordshowonstatus.value != 1 && cv_discordshowonstatus.value != 5))
-			{
-				discordPresence.largeImageKey = "misctitle";
-				discordPresence.largeImageText = "Sonic Robo Blast 2 Kart";
-			}
+			strcpy(imagestr, "misctitle");
+			strcpy(imagetxtstr,
+					// Allow Statuses
+					((!cv_discordshowonstatus.value || cv_discordshowonstatus.value == 6) ?
+						((gamestate == GS_TIMEATTACK) ? "Time Attack" : "Title Screen") :
+					
+					// Show No Statuses
+					("Sonic Robo Blast 2 Kart")));
+			
+			(((!cv_discordshowonstatus.value || cv_discordshowonstatus.value == 6) && !Playing()) ?
+				snprintf(statestr, 130,
+						// Game States
+						((gamestate == GS_TIMEATTACK) ? "In the Time Attack Menu" :
+
+						// Demo States
+						((!demo.playback && demo.title) ? "Main Menu" :
+						((demo.playback && !demo.title) ? "Watching Replays" :
+						((demo.playback && demo.title) ? "Watching A Demo" : "???"))))) : 0);
 		}
-		
-		//// Statuses ////
-		if (cv_discordshowonstatus.value != 7 && ((Playing() && playeringame[consoleplayer] && !demo.playback) || cv_discordshowonstatus.value == 7))
+
+		//// Status Text ////
+		if (((Playing() && playeringame[consoleplayer] && !demo.playback) || cv_discordshowonstatus.value == 7))
 		{
-			//// Emblems ////
-			if (!cv_discordshowonstatus.value || cv_discordshowonstatus.value == 3)
+			//// Medals ////
+			if (!cv_discordshowonstatus.value || cv_discordshowonstatus.value == 4)
 			{
 				if ((!(netgame || splitscreen)) || (cv_discordshowonstatus.value))
-					snprintf((!netgame ? detailstr : statestr), 128, "%d/%d Emblems", M_CountEmblems(), (numemblems + numextraemblems));
+					snprintf((!netgame ? detailstr : statestr), 130, "%d/%d Medals", M_CountEmblems(), (numemblems + numextraemblems));
 			}
 
 			//// Score ////
 			if (cv_discordshowonstatus.value == 2)
-				strlcat((!netgame ? detailstr : statestr), va("Current Score: %d", players[consoleplayer].score), 128);
-			
+				strlcat((!netgame ? detailstr : statestr), va("Current Score: %d", players[consoleplayer].score), 130);
+				
 			//// SRB2 Playtime ////
 			if (cv_discordshowonstatus.value == 6)
-				strlcat(((Playing() && !netgame) ? detailstr : statestr), va("Total Playtime: %d Hours, %d Minutes, and %d Seconds", G_TicsToHours(totalplaytime), G_TicsToMinutes(totalplaytime, false), G_TicsToSeconds(totalplaytime)), 128);
-
-			//// Tiny Detail Things; Complete Games, etc. ////
+				strlcat(((Playing() && !netgame) ? detailstr : statestr), va("Total Playtime: %d Hours, %d Minutes, and %d Seconds", G_TicsToHours(totalplaytime), G_TicsToMinutes(totalplaytime, false), G_TicsToSeconds(totalplaytime)), 130);
+			
+			//// Tiny Details, Such as Complete Games, etc. ////
 			if (!splitscreen && !netgame)
 			{
 				if (cv_discordshowonstatus.value != 1 && cv_discordshowonstatus.value != 2 && cv_discordshowonstatus.value != 4 && cv_discordshowonstatus.value != 5)
-					snprintf(detailGrammar, 3, ", ");
-
-				if (gamecomplete) //You've beat the game? You Get A Special Status Then!
+					strcpy(detailGrammar, ", ");
+				
+				if (gamecomplete) // You've Beaten the Game? You Get A Special Status Then!
 					strlcat(detailstr, va("%sHas Beaten the Game" , detailGrammar), 128);
 			}
 		}
-		
-		//// Apply our Info, And We're Done :) ////
-		discordPresence.details = detailstr;
-		discordPresence.state = statestr;
 	}
-	
-	//// EVEN MORE INFO ////
-	//// Statuses ////
+
+	////// 	  STATUSES - ELECTRIC BOOGALO 	 //////
 	if (!cv_discordshowonstatus.value || cv_discordshowonstatus.value == 4)
 	{
 		if (((gamestate == GS_LEVEL || gamestate == GS_INTERMISSION || gamestate == GS_VOTING) && Playing() && playeringame[consoleplayer]) || (paused || menuactive || jukeboxMusicPlaying))
@@ -998,41 +1047,36 @@ void DRPC_UpdatePresence(void)
 					(modeattacking ? "" : gametype_cons_t[gametype].strvalue), 
 					(gametype == GT_RACE ? va(" | %s", kartspeed_cons_t[gamespeed].strvalue) : ""),
 					(encoremode ? " | Encore" : ""));
-				
+
 				// Mods //
-				if (modifiedgame && numwadfiles > (mainwads+1))
-					strlcat(gameType, ((numwadfiles - (mainwads+1) > 1) ? va(" With %d Mods", numwadfiles - (mainwads+1)) : (" With 1 Mod")), 105);
+				if (modifiedgame && numwadfiles > (mainwads+extrawads))
+					strlcat(gameType, ((numwadfiles - (mainwads+extrawads) > 1) ? va(" With %d Mods", numwadfiles - (mainwads+extrawads)) : (" With 1 Mod")), 105);
 				
 				// Spectators //
-				if (playeringame[displayplayers[stplyr-players]])
-				{	
-					if (!players[consoleplayer].spectator)
-					{
-						snprintf(spectatorGrammar, 4, (((displayplayers[stplyr-players] != consoleplayer) || (cv_discordstatusmemes.value && (displayplayers[stplyr-players] != consoleplayer))) ? "ing" : "er"));
-						snprintf(spectatorType, 21, "View%s", spectatorGrammar);
-					}
-					else
-					{
-						snprintf(lifeGrammar, 12, ", Dead; ");
-						snprintf(spectatorGrammar, 4, (((displayplayers[stplyr-players] != consoleplayer) || (cv_discordstatusmemes.value && (displayplayers[stplyr-players] == consoleplayer))) ? "ing" : "or"));
-						snprintf(spectatorType, 21, "Spectat%s", spectatorGrammar);
-						
-						if (displayplayers[stplyr-players] == consoleplayer)
-							snprintf(lifeType, 27, (!cv_discordstatusmemes.value ? "In %s Mode" : "%s Air"), spectatorType);
-					}
-					
-					// Viewpoints //
-					if (displayplayers[stplyr-players] != consoleplayer)
-						snprintf(lifeType, 30, "%s %s", spectatorType, player_names[stplyr-players]);
+				if (!players[consoleplayer].spectator)
+				{
+					//strcpy(spectatorGrammar, (((displayplayers[stplyr-players] != consoleplayer) || (cv_discordstatusmemes.value && (displayplayers[stplyr-players] != consoleplayer))) ? "ing" : "er"));
+					strcpy(spectatorType, va(", View%s", spectatorGrammar));
 				}
+				else
+				{
+					strcpy(lifeGrammar, ", Dead; ");
+					strcpy(spectatorGrammar, (((displayplayers[stplyr-players] != consoleplayer) || (cv_discordstatusmemes.value && (displayplayers[stplyr-players] == consoleplayer))) ? "ing" : "or"));
+					strcpy(spectatorType, va("Spectat%s", spectatorGrammar));
+					
+					if (displayplayers[stplyr-players] == consoleplayer)
+						strcpy(lifeType, va((!cv_discordstatusmemes.value ? "In %s Mode" : "%s Air"), spectatorType));
+				}
+				if (displayplayers[stplyr-players] != consoleplayer)
+					strcpy(lifeType, va("%s %s", spectatorType, player_names[stplyr-players]));
 			}
 
-			//// Statuses That Appear Whenever ////
-			// Tiny State Things; Pausing, Active Menues, etc. //
+			//// Statuses That Can Appear Whenever ////
+			// Tiny States, Such as Pausing, Scrolling Through Menus, etc. //
 			if (paused || menuactive || jukeboxMusicPlaying)
 			{
 				if (!cv_discordshowonstatus.value || (cv_discordshowonstatus.value == 5 && Playing()) || !Playing())
-					snprintf(stateGrammar, 3, ", ");
+					strcpy(stateGrammar, ", ");
 
 				snprintf(stateType, 27, (paused ? "%sCurrently Paused" : (menuactive ? "%sScrolling Through Menus" : "")), stateGrammar);
 				strlcat(stateType, (jukeboxMusicPlaying ? va("%sPlaying %s in the Jukebox", stateGrammar, jukeboxMusicName) : ""), 95);
@@ -1041,49 +1085,81 @@ void DRPC_UpdatePresence(void)
 			// Copy All Of Our Strings //
 			strlcat(statestr, va("%s%s%s%s%s", gametypeGrammar, gameType, lifeGrammar, lifeType, stateType), 130);
 		}
-		
-		// Apply String to Status //
-		discordPresence.state = statestr;
 	}
 
-	//// Maps ////
+	////// 	  MAPS 	 //////
 	if (!cv_discordshowonstatus.value || cv_discordshowonstatus.value == 5)
 	{
-		if (gamestate == GS_LEVEL || gamestate == GS_INTERMISSION || gamestate == GS_TITLESCREEN) // Map info
+		// Scene Info //
+		if (gamestate == GS_EVALUATION || gamestate == GS_GAMEEND || gamestate == GS_INTRO || gamestate == GS_CUTSCENE || gamestate == GS_CREDITS || gamestate == GS_CONTINUING)
 		{
-			if ((gamemap >= 1 && gamemap <= 60) // Supported Race Maps
-			|| (gamemap >= 136 && gamemap <= 164)) // Supported Battle Maps
-			{
-				snprintf(mapimg, 8, "%s", G_BuildMapName(gamemap));
-				strlwr(mapimg);
-				
-				discordPresence.largeImageKey = mapimg; // Map image
-			}
-			else
-				discordPresence.largeImageKey = "mapcustom";
+			strcpy(imagestr, (gamestate == GS_INTRO ? "miscintro1" : "misctitle"));
+			strcpy(imagetxtstr, (gamestate == GS_INTRO ? "Intro" : "Sonic Robo Blast 2 Kart"));
 			
-			if (mapheaderinfo[gamemap-1]->menuflags & LF2_HIDEINMENU)
+			snprintf(statestr, 130,
+							// No Ultimate Mode
+							(!ultimatemode ?
+								(gamestate == GS_EVALUATION ? "Evaluating Results" :
+								(gamestate == GS_CONTINUING ? "On the Continue Screen" :
+								(gamestate == GS_CREDITS ? "Viewing the Credits" :
+								(gamestate == GS_GAMEEND ? (!cv_discordstatusmemes.value ? "Returning to the Main Menu..." : "Did You Get All Those Chaos Emeralds?") :
+								(gamestate == GS_INTRO ? "Watching The Intro" :
+								(gamestate == GS_CUTSCENE ? "Watching A Cutscene" : "???")))))) :
+								
+							// Ultimate Mode
+							(!cv_discordstatusmemes.value ? "Just Beat Ultimate Mode!" : "Look Guys, It's my Greatest Achievement: An SRB2 Discord RPC Status Saying I Beat Ultimate Mode!")));
+		}
+
+		// Map Info //
+		else if (gamestate == GS_LEVEL || gamestate == GS_INTERMISSION || gamestate == GS_TITLESCREEN)
+		{
+			// Map Images (Now With More Specificness)
+			if ((gamemap >= 1 && gamemap <= 16) 	// Supported Co-op Maps (GFZ-RVZ1)
+			|| (gamemap >= 22 && gamemap <= 23) 	// Supported Co-op Maps (ERZ1-ERZ2)
+			|| (gamemap >= 25 && gamemap <= 27) 	// Supported Co-op Maps (BCZ1-BCZ3)
+
+			|| (gamemap >= 30 && gamemap <= 33) 	// Supported Extra Maps
+			|| (gamemap >= 40 && gamemap <= 42) 	// Supported Advanced Maps
+
+			|| (gamemap >= 50 && gamemap <= 57) 	// Supported Singleplayer NiGHTS Stages
+			|| (gamemap >= 60 && gamemap <= 66) 	// Supported Co-op Special Stages
+			|| (gamemap >= 70 && gamemap <= 73) 	// Supported Bonus NiGHTS Stages
+
+			|| (gamemap >= 280 && gamemap <= 288) 	// Supported CTF Maps
+			|| (gamemap >= 532 && gamemap <= 543) 	// Supported Match Maps
+
+			|| (gamemap == 1000))					// Tutorial Zone
 			{
-				discordPresence.largeImageKey = "miscdice"; // Hell Map, use the method that got you here :P
-				discordPresence.largeImageText = "???"; // Hell map, hide the name
+				strcpy(mapimg, va("%s", G_BuildMapName(gamemap)));
+				strlwr(mapimg);
+				strcpy(imagestr, mapimg);
 			}
 			else
+				strcpy(imagestr, "mapcustom");
+			
+			// Map Names
+			if (mapheaderinfo[gamemap-1]->menuflags & LF2_HIDEINMENU)
+				strcpy(imagetxtstr, "???");
+			else
 			{
-				// Find The Map Name
-				snprintf(mapname, 48, (gamestate != GS_TITLESCREEN ? "%s" : "Title Screen"), (gamestate != GS_TITLESCREEN ? G_BuildMapTitle(gamemap) : 0));
+				// List the Name
+				char *maptitle = G_BuildMapTitle(gamemap);
+				snprintf(mapname, 48, (gamestate != GS_TITLESCREEN ? "%s" : "Title Screen"), (gamestate != GS_TITLESCREEN ? maptitle : 0));
+				Z_Free(maptitle);
 
-				// List the Map Name
-				discordPresence.largeImageText = mapname;
+				// Display Some Text Under The Map's Name
+				strcpy(imagetxtstr, mapname);
 				
 				// Display the Map's Name on our Status, Since That's What We Set
-				if (cv_discordshowonstatus.value == 4)
-					discordPresence.state = mapname;
+				if (cv_discordshowonstatus.value == 5)
+					strcpy(statestr, mapname);
 
 				// Display The Title Screen Images, If We're on That
 				if (gamestate == GS_TITLESCREEN)
-					discordPresence.largeImageKey = "misctitle";
+					strcpy(imagestr, "misctitle");
 			}
 
+			// Time //
 			if (Playing() || (Playing() && (paused || menuactive)))
 			{
 				const time_t currentTime = time(NULL);
@@ -1105,106 +1181,148 @@ void DRPC_UpdatePresence(void)
 		}
 	}
 
-	//// Characters ////
-	if ((!cv_discordshowonstatus.value || cv_discordshowonstatus.value == 1) && (Playing() && playeringame[consoleplayer]))
+	////// 	  CHARACTERS 	 //////
+	if (!cv_discordshowonstatus.value || cv_discordshowonstatus.value == 1)
 	{
-		// Character Images/Tags //
-		snprintf(charImageType, 5, (!cv_discordcharacterimagetype.value ? "char" : "cont"));
-		snprintf(charimg, 11, "%scustom", charImageType);
-		snprintf(charimgS, 11, ((cv_discordshowonstatus.value && ((playeringame[1] && players[1].bot) || splitscreen)) ? "%scustom" : ""), ((cv_discordshowonstatus.value && ((playeringame[1] && players[1].bot) || splitscreen)) ? charImageType : 0));
+		//// Character Types ////
+		strcpy(charImageType, (!cv_discordcharacterimagetype.value ? "char" : (cv_discordcharacterimagetype.value == 1 ? "cont" : "life")));
+
+		//// Character Images ////
+		strcpy(charimg, va("%scustom", charImageType));
+		strcpy(charimgS, va(((cv_discordshowonstatus.value && ((playeringame[1] && players[1].bot) || splitscreen)) ? "%scustom" : ""), ((cv_discordshowonstatus.value && ((playeringame[1] && players[1].bot) || splitscreen)) ? charImageType : 0)));
 		
-		// Supported Characters //
-		// Main Characters
-		for (i = 0; i < 35; i++) // 35 Custom Characters Are Currently Supported :P
-		{							
-			if (strcmp(skins[players[consoleplayer].skin].name, supportedSkins[i]) == 0)
-			{
-				snprintf(charimg, 36, "%s%s", charImageType, skins[players[consoleplayer].skin].name);	
-				break; // We Found Our Character!
-			}
-		}
-		
-		// Side Characters
-		if (cv_discordshowonstatus.value && playeringame[1] && players[1].bot)
+		if (Playing())
 		{
-			for (i = 0; i < 34; i++)
+			// Supported Characters //
+			// Main Characters
+			while (supportedSkins[checkSkin] != NULL)
 			{
-				if (strcmp(skins[players[1].skin].name, supportedSkins[i]) == 0)
-				{	
-					snprintf(charimgS, 36, "%s%s", charImageType, skins[players[1].skin].name);
-					break; // Electric Boogalo
+				if (strcmp(skins[players[consoleplayer].skin].name, supportedSkins[checkSkin]) == 0)
+				{
+					strcpy(charimg, va("%s%s", charImageType, supportedSkins[checkSkin]));	
+					break;
+				}
+
+				checkSkin++;
+			}
+			
+			// Side Characters; The Above: Electric Boogalo Electric Boogalo
+			if (cv_discordshowonstatus.value && ((playeringame[1] && players[1].bot) || (splitscreen)))
+			{
+				while (supportedSkins[checkSideSkin] != NULL)
+				{
+					if (strcmp(skins[players[1].skin].name, supportedSkins[checkSideSkin]) == 0)
+					{	
+						strcpy(charimgS, va("%s%s", charImageType, supportedSkins[checkSideSkin]));
+						break;
+					}
+
+					checkSideSkin++;
 				}
 			}
+			
+			//// Renderers ////
+			if (playeringame[consoleplayer])
+			{
+				// Display Character Names //
+				if (!splitscreen)
+					// No Bots
+					(!(playeringame[1] && players[1].bot) ?
+					(snprintf(charname, 75, "Playing As: %s",
+											((players[consoleplayer].powers[pw_super] && (strcmp(skins[players[consoleplayer].skin].name, "sonic") == 0)) ? "Super Sonic" : skins[players[consoleplayer].skin].realname))) :
+					
+					// One Bot, Default Status Option
+					(!cv_discordshowonstatus.value ?
+					snprintf(charname, 75, "Playing As: %s & %s",
+						((players[consoleplayer].powers[pw_super] && (strcmp(skins[players[consoleplayer].skin].name, "sonic") == 0)) ? "Super Sonic" : skins[players[consoleplayer].skin].realname), skins[players[1].skin].realname) :
+					
+					// One Bot, Only Characters Status Option
+					(snprintf(charname, 75, "Playing As: %s", ((players[consoleplayer].powers[pw_super] && (strcmp(skins[players[consoleplayer].skin].name, "sonic") == 0)) ? "Super Sonic" : skins[players[consoleplayer].skin].realname)), snprintf(charnameS, 75, "& %s", skins[players[1].skin].realname))));
+				else
+					// The Secondary Display Player, Default Status Option
+					(!cv_discordshowonstatus.value ?
+					snprintf(charname, 75, "%s & %s", player_names[consoleplayer], player_names[1]) :
+					
+					// The Secondary Display Player, Default Status Option
+					(snprintf(charname, 75, "%s", player_names[consoleplayer]), snprintf(charnameS, 75, "%s", player_names[1])));
+				
+				// Apply Character Images and Names //
+				(!cv_discordshowonstatus.value ? strcpy(simagetxtstr, charname) : (strcpy(imagetxtstr, charname), strcpy(simagetxtstr, charnameS))); // Character Names, And Bot Names, If They Exist
+				(!cv_discordshowonstatus.value ? strcpy(simagestr, charimg) : (strcpy(imagestr, charimg), strcpy(simagestr, charimgS))); // Character images			
+				
+				// Also Set it On Their Status, Since They Set it To Be That Way //
+				if (cv_discordshowonstatus.value)
+					strcpy(statestr,
+							// Split-Screen //
+							(strcmp(charnameS, "") != 0 ? (splitscreen ? va("%s & %s", charname, charnameS) :
+							
+							// No Split-Screen //
+							// Bots
+							((playeringame[2] && players[2].bot) ?
+								// Three Bots
+								(!(playeringame[3] && players[3].bot) ? va("%s %s & %s", charname, charnameS, skins[players[2].skin].realname) :
+							
+								// More Than Three Bots
+								va("%s %s & %s With Multiple Bots", charname, charnameS, skins[players[2].skin].realname)) :
+								
+								// Two Bots
+								va("%s %s", charname, charnameS))) : 
+							
+							// No Bots
+							charname));
+			}
 		}
-		
-		// Character Names //
-		if (!splitscreen) // Why Would You Split My Screen
-		{
-			if (!players[1].bot) // No Bots //
-				snprintf(charname, 75, "Playing As: %s", skins[players[consoleplayer].skin].realname);
-			else // Bots //
-				(!cv_discordshowonstatus.value ? snprintf(charname, 75, "Playing As: %s & %s", skins[players[consoleplayer].skin].realname, skins[players[1].skin].realname) : (snprintf(charname, 75, "Playing As: %s", skins[players[consoleplayer].skin].realname), snprintf(charnameS, 75, "& %s", skins[players[1].skin].realname)));
-		}
-		else // I Split my Screen
-			(!cv_discordshowonstatus.value ? snprintf(charname, 50, "%s & %s", player_names[consoleplayer], player_names[1]) : (snprintf(charname, 50, "%s", player_names[consoleplayer]), snprintf(charnameS, 50, "%s", player_names[1]))); // Show Both of The Players' Names and Render Their Character Images
-		
-		// Apply Character Images and Names //
-		(!cv_discordshowonstatus.value ? discordPresence.smallImageText = charname : (discordPresence.largeImageText = charname, discordPresence.smallImageText = charnameS)); // Character Names, And Bot Names, If They Exist
-		(!cv_discordshowonstatus.value ? discordPresence.smallImageKey = charimg : (discordPresence.largeImageKey = charimg, discordPresence.smallImageKey = charimgS)); // Character images			
-		
-		// Also Set it On Their Status, Since They Set it To Be That Way //
-		if (cv_discordshowonstatus.value)
-			discordPresence.state = (strcmp(charnameS, "") != 0 ?
-										// Split-Screen //
-										(splitscreen ? va("%s & %s", charname, charnameS) :
-										
-										// No Split-Screen //
-										// Bots						
-										(players[2].bot ? (!players[3].bot ? va("%s %s & %s", charname, charnameS, skins[players[2].skin].realname) : va("%s %s & %s With Multiple Bots", charname, charnameS, skins[players[2].skin].realname)) : va("%s %s", charname, charnameS))) : 
-										
-										// No Bots
-										charname);
-		
 	}
 	
-	//// Custom Statuses ////
+	////// 	  CUSTOM STATUSES 	 //////
 	if (cv_discordshowonstatus.value == 7)
 	{
-		// Run Our Starting Things //
 		DRPC_StringError();
 
 		// Write the Heading Strings to Discord //
-		(strlen(cv_customdiscorddetails.string) > 2 ? discordPresence.details = cv_customdiscorddetails.string : 0);
-		(strlen(cv_customdiscordstate.string) > 2 ? discordPresence.state = cv_customdiscordstate.string : 0);
+		(strlen(cv_customdiscorddetails.string) > 2 ? strcpy(detailstr, cv_customdiscorddetails.string) : 0);
+		(strlen(cv_customdiscordstate.string) > 2 ? strcpy(statestr, cv_customdiscordstate.string) : 0);
 
 		// Write The Images and Their Text to Discord //
 		// Small Images
 		if (cv_customdiscordsmallimagetype.value != 5)
 		{
-			snprintf(customSImage, 50, "%s%s", customStringType[cv_customdiscordsmallimagetype.value],
+			strcpy(customSImage, va("%s%s", customStringType[cv_customdiscordsmallimagetype.value],
 				(cv_customdiscordsmallimagetype.value <= 2 ? supportedSkins[cv_customdiscordsmallcharacterimage.value] :
-				(cv_customdiscordsmallimagetype.value == 3 ? supportedMaps[cv_customdiscordsmallmapimage.value] : supportedMiscs[cv_customdiscordsmallmiscimage.value])));
+				(cv_customdiscordsmallimagetype.value == 3 ? supportedMaps[cv_customdiscordsmallmapimage.value] :
+			supportedMiscs[cv_customdiscordsmallmiscimage.value]))));
 		
-			discordPresence.smallImageKey = customSImage;
-			(strlen(cv_customdiscordsmallimagetext.string) > 2 ? discordPresence.smallImageText = cv_customdiscordsmallimagetext.string : 0);
+			strcpy(simagestr, customSImage);
+			(strlen(cv_customdiscordsmallimagetext.string) > 2 ? strcpy(simagetxtstr, cv_customdiscordsmallimagetext.string) : 0);
 		}
 		
 		// Large Images
 		if (cv_customdiscordlargeimagetype.value != 5)
 		{
-			snprintf(customLImage, 50, "%s%s", customStringType[cv_customdiscordlargeimagetype.value],
+			strcpy(customLImage, va("%s%s", customStringType[cv_customdiscordlargeimagetype.value],
 				(cv_customdiscordlargeimagetype.value <= 2 ? supportedSkins[cv_customdiscordlargecharacterimage.value] :
-				(cv_customdiscordlargeimagetype.value == 3 ? supportedMaps[cv_customdiscordlargemapimage.value] : supportedMiscs[cv_customdiscordlargemiscimage.value])));
+				(cv_customdiscordlargeimagetype.value == 3 ? supportedMaps[cv_customdiscordlargemapimage.value] :
+			supportedMiscs[cv_customdiscordlargemiscimage.value]))));
 
-			discordPresence.largeImageKey = customLImage;
-			(strlen(cv_customdiscordlargeimagetext.string) > 2 ? discordPresence.largeImageText = cv_customdiscordlargeimagetext.string : 0);
+			strcpy(imagestr, customLImage);
+			(strlen(cv_customdiscordlargeimagetext.string) > 2 ? strcpy(imagetxtstr, cv_customdiscordlargeimagetext.string) : 0);
 		}
 	}
 
+	////// 	  APPLY ALL INFO 	 //////
+	discordPresence.details = detailstr;
+	discordPresence.state = statestr;
+
+	discordPresence.smallImageKey = simagestr;
+	discordPresence.smallImageText = simagetxtstr;
+
+	discordPresence.largeImageKey = imagestr;
+	discordPresence.largeImageText = imagetxtstr;
+
+	// Flush the Request List, if it Exists and We Can't Join
 	if (!joinSecretSet)
-		DRPC_EmptyRequests(); // Flush the Request List, if it Exists, and We Can't Join
-	
-	Discord_RunCallbacks();
+		DRPC_EmptyRequests();
+
 	Discord_UpdatePresence(&discordPresence);
 }
 
@@ -1214,15 +1332,21 @@ void DRPC_UpdatePresence(void)
 		Clears Everything Related to Discord
 		Rich Presence. Only Runs On Game Close
 		or Crash.
+
+	Input Arguments:-
+		None
 --------------------------------------------------*/
 void DRPC_ShutDown(void)
 {
-	// Assign a Custom Status Because We Can
+	// Initialize Discord Once More
 	DiscordRichPresence discordPresence;
 	memset(&discordPresence, 0, sizeof(discordPresence));
-
+	memset(&discordInfo, 0, sizeof(discordInfo));
+	
+	// Assign a Custom Status Because We Can
 	discordPresence.details = "Currently Closing...";
 	discordPresence.state = "Clearing SRB2 Discord Rich Presence...";
+	Discord_UpdatePresence(&discordPresence);
 	
 	// Empty Requests
 	DRPC_EmptyRequests();

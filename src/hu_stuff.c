@@ -2324,6 +2324,9 @@ void HU_DrawSongCredits(void)
 	if (!cursongcredit.def) // No def
 		return;
 
+	if (jukeboxMusicPlaying)
+		return; // Jukeboxes Do Their Own Version of Our Hook
+
 	str = va("\x1F"" %s", cursongcredit.def->source);
 	len = V_ThinStringWidth(str, V_ALLOWLOWERCASE|V_6WIDTHSPACE);
 	destx = (len + 7) * FRACUNIT;

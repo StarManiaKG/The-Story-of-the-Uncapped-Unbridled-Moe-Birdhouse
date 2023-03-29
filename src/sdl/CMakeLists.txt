@@ -26,6 +26,26 @@ else()
 	set(SRB2_SDL2_SOUNDIMPL sdl_sound.c)
 endif()
 
+if(${SRB2_CONFIG_HAVE_MIXERX})
+	if(${SRB2_CONFIG_USE_INTERNAL_LIBRARIES})
+		set(MIXERX_FOUND ON)
+		set(MIXERX_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/libs/SDLMixerX/i686-w64-mingw32/include/SDL2)
+        if(${SRB2_SYSTEM_BITS} EQUAL 64)
+			set(MIXERX_LIBRARIES "-L${CMAKE_SOURCE_DIR}/libs/SDLMixerX/x86_64-w64-mingw32/lib -lSDL2_mixer_ext")
+		else() # 32-bit
+			set(MIXERX_LIBRARIES "-L${CMAKE_SOURCE_DIR}/libs/SDLMixerX/i686-w64-mingw32/lib -lSDL2_mixer_ext")
+		endif()
+	else()
+		find_package(MIXERX)
+	endif()
+	if(${MIXERX_FOUND})
+		set(SRB2_HAVE_MIXERX ON)
+		target_compile_definitions(SRB2SDL2 PRIVATE -DHAVE_MIXERX)
+	else()
+		message(WARNING "You have specified that SDL Mixer X is available but it was not found.")
+	endif()
+endif()
+
 set(SRB2_SDL2_SOURCES
 	dosstr.c
 	endtxt.c
@@ -178,6 +198,10 @@ if(${SDL2_FOUND})
 		${DISCORDRPC_LIBRARIES}
 	)
 
+	if((${SRB2_HAVE_MIXER}) OR (${SRB2_HAVE_MIXERX}))
+		target_compile_definitions(SRB2SDL2 PRIVATE -DHAVE_MIXER -DSOUND=SOUND_MIXER)
+	endif()
+
 	if(${CMAKE_SYSTEM} MATCHES Linux)
 		target_link_libraries(SRB2SDL2 PRIVATE
 			m
@@ -307,12 +331,14 @@ if(${SDL2_FOUND})
 							HINTS ${CMAKE_SOURCE_DIR}/libs/dll-binaries/x86_64
 							HINTS ${CMAKE_SOURCE_DIR}/libs/SDL2/x86_64-w64-mingw32/bin
 							HINTS ${CMAKE_SOURCE_DIR}/libs/SDL2_mixer/x86_64-w64-mingw32/bin
+							HINTS ${CMAKE_SOURCE_DIR}/libs/SDLMixerX/x86_64-w64-mingw32/bin
 						)
 					else()
 						find_library(SRB2_SDL2_DLL_${dllname} "${defaultname}"
 							HINTS ${CMAKE_SOURCE_DIR}/libs/dll-binaries/i686
 							HINTS ${CMAKE_SOURCE_DIR}/libs/SDL2/i686-w64-mingw32/bin
 							HINTS ${CMAKE_SOURCE_DIR}/libs/SDL2_mixer/i686-w64-mingw32/bin
+							HINTS ${CMAKE_SOURCE_DIR}/libs/SDLMixerX/i686-w64-mingw32/bin
 						)
 					endif()
 				else()
@@ -321,12 +347,14 @@ if(${SDL2_FOUND})
 							HINTS ${CMAKE_SOURCE_DIR}/libs/dll-binaries/x86_64
 							HINTS ${CMAKE_SOURCE_DIR}/libs/SDL2/lib/x64
 							HINTS ${CMAKE_SOURCE_DIR}/libs/SDL2_mixer/lib/x64
+							HINTS ${CMAKE_SOURCE_DIR}/libs/SDLMixerX/x86_64-w64-mingw32/bin
 						)
 					else()
 						find_library(SRB2_SDL2_DLL_${dllname} "${defaultname}"
 							HINTS ${CMAKE_SOURCE_DIR}/libs/dll-binaries/i686
 							HINTS ${CMAKE_SOURCE_DIR}/libs/SDL2/lib/x86
 							HINTS ${CMAKE_SOURCE_DIR}/libs/SDL2_mixer/lib/x86
+							HINTS ${CMAKE_SOURCE_DIR}/libs/SDLMixerX/i686-w64-mingw32/bin
 						)
 					endif()
 				endif()
@@ -343,6 +371,11 @@ if(${SDL2_FOUND})
 			getwinlib(libogg_0 "libogg-0.dll")
 			getwinlib(libvorbis_0 "libvorbis-0.dll")
 			getwinlib(libvorbisfile_3 "libvorbisfile-3.dll")
+		endif()
+		if(${SRB2_CONFIG_HAVE_MIXERX})
+			getwinlib(SDL2_mixer_ext "SDL2_mixer_ext.dll")
+			getwinlib(libgcc_s_sjlj-1 "libgcc_s_sjlj-1.dll")
+			getwinlib(libstdc++-6 "libstdc++-6.dll")
 		endif()
 		if(${SRB2_CONFIG_HAVE_GME})
 			getwinlib(libgme "libgme.dll")

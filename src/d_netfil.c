@@ -967,6 +967,7 @@ void Got_Filetxpak(void)
 	char *filename = file->filename;
 	static INT32 filetime = 0;
 
+	// TSOTUUMB's Files Were Here but I Removed Them lol
 	if (!(strcmp(filename, "srb2.srb")
 		&& strcmp(filename, "srb2.wad")
 		&& strcmp(filename, "patch.dta")
@@ -978,9 +979,6 @@ void Got_Filetxpak(void)
 		&& strcmp(filename, "sounds.kart")
 		&& strcmp(filename, "music.kart")
 		&& strcmp(filename, "patch.kart")
-
-		&& strcmp(filename, "tsotuumb.kart")
-		//&& strcmp(filename, "jukebox.kart")
 		))
 		I_Error("Tried to download \"%s\"", filename);
 

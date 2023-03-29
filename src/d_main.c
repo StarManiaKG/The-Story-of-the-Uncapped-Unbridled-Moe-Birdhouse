@@ -133,15 +133,11 @@ INT32 postimgparam[MAXSPLITSCREENPLAYERS];
 // whether the respective sound system is disabled
 // or they're init'ed, but the player just toggled them
 #ifdef _XBOX
-#ifndef NO_MIDI
 boolean midi_disabled = true;
-#endif
 boolean sound_disabled = true;
 boolean digital_disabled = true;
 #else
-#ifndef NO_MIDI
 boolean midi_disabled = false;
-#endif
 boolean sound_disabled = false;
 boolean digital_disabled = false;
 #endif
@@ -160,6 +156,7 @@ char srb2home[256] = ".";
 char srb2path[256] = ".";
 #endif
 boolean autoloading = false;
+INT32 extrawads;
 boolean usehome = true;
 const char *pandf = "%s" PATHSEP "%s";
 
@@ -841,6 +838,13 @@ void D_SRB2Loop(void)
 void D_StartTitle(void)
 {
 	INT32 i;
+
+	// Put a New Section Here Just so It Doesn't Reset My Fun lol
+	if (!jukeboxMusicPlaying)
+		S_StopMusic();
+	else if (jukeboxMusicPlaying && paused)
+		S_ResumeAudio();
+
 	if (netgame)
 	{
 		if (gametype == GT_RACE) // SRB2kart
@@ -1041,6 +1045,30 @@ static void IdentifyVersion(void)
 	MUSICTEST("jukebox.kart")
 #undef MUSICTEST
 #endif
+
+	// Do Extra Star Stuff //
+	// Extra Wads
+	char *musicdta = malloc(strlen(srb2waddir)+1+9+1);
+	if (musicdta)
+	{
+		sprintf(musicdta, pandf, srb2waddir, "music.dta");
+		if (FIL_ReadFileOK(musicdta))
+		{
+			extrawads += 1;
+			free(musicdta);
+		}
+	}
+
+	char *jukeboxpk3 = malloc(strlen(srb2waddir)+1+11+1);
+	if (jukeboxpk3)
+	{
+		sprintf(jukeboxpk3, pandf, srb2waddir, "jukebox.pk3");
+		if (FIL_ReadFileOK(jukeboxpk3))
+		{
+			extrawads += 1;
+			free(jukeboxpk3);
+		}
+	}
 }
 
 /* ======================================================================== */
@@ -1518,17 +1546,13 @@ void D_SRB2Main(void)
 	{
 		sound_disabled = true;
 		digital_disabled = true;
-#ifndef NO_MIDI
 		midi_disabled = true;
-#endif
 	}
 	if (M_CheckParm("-noaudio")) // combines -nosound and -nomusic
 	{
 		sound_disabled = true;
 		digital_disabled = true;
-#ifndef NO_MIDI
 		midi_disabled = true;
-#endif
 	}
 	else
 	{
@@ -1537,25 +1561,17 @@ void D_SRB2Main(void)
 		if (M_CheckParm("-nomusic")) // combines -nomidimusic and -nodigmusic
 		{
 			digital_disabled = true;
-#ifndef NO_MIDI
 			midi_disabled = true;
-#endif
 		}
 		else
 		{
-#ifndef NO_MIDI
 			if (M_CheckParm("-nomidimusic"))
 				midi_disabled = true; // WARNING: DOS version initmusic in I_StartupSound
-#endif
 			if (M_CheckParm("-nodigmusic"))
 				digital_disabled = true; // WARNING: DOS version initmusic in I_StartupSound
 		}
 	}
-	if (!( sound_disabled && digital_disabled
-#ifndef NO_MIDI
-				&& midi_disabled
-#endif
-	 ))
+	if (!( sound_disabled && digital_disabled && midi_disabled))
 	{
 		CONS_Printf("S_InitSfxChannels(): Setting up sound channels.\n");
 		I_StartupSound();

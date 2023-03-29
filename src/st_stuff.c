@@ -1829,6 +1829,114 @@ static void ST_doItemFinderIconsAndSound(void) // SRB2kart - unused.
 }
 */
 
+// STAR SECTION //
+//
+// Draws Jukebox Text On The Screen/HUD
+//
+boolean initJukeboxHUD;
+UINT16 chosenColor;
+
+INT32 boxw = 300; // Slides our Filed Box to Width 245
+INT32 strw = 300; // Slides our Regular String to Width 230
+INT32 tstrw = 300; // Slides our Thin String to Width 195
+
+INT32 slidetime = (1*TICRATE-2);
+
+/*
+void HU_DrawSongCredits(void)
+{
+	char *str;
+	INT32 len;
+	fixed_t destx;
+	INT32 y = (splitscreen ? (BASEVIDHEIGHT/2)-4 : 32);
+	INT32 bgt;
+
+	if (!cursongcredit.def) // No def
+		return;
+
+	if (jukeboxMusicPlaying)
+		return; // Jukeboxes Do Their Own Version of Our Hook
+
+	str = va("\x1F"" %s", cursongcredit.def->source);
+	len = V_ThinStringWidth(str, V_ALLOWLOWERCASE|V_6WIDTHSPACE);
+	destx = (len + 7) * FRACUNIT;
+
+	if (cursongcredit.anim)
+	{
+		if (cursongcredit.x < destx)
+			cursongcredit.x += FixedMul((destx - cursongcredit.x) / 2, renderdeltatics);
+		if (cursongcredit.x > destx)
+			cursongcredit.x = destx;
+	}
+	else
+	{
+		if (cursongcredit.x > 0)
+			cursongcredit.x -= FixedMul(cursongcredit.x / 2, renderdeltatics);
+		if (cursongcredit.x < 0)
+			cursongcredit.x = 0;
+	}
+
+	bgt = (NUMTRANSMAPS/2) + (cursongcredit.trans/2);
+
+	// v1 does not have v2's font revamp, so there is no function for thin string at fixed_t
+	// sooo I'm just killing the precision.
+	if (bgt < NUMTRANSMAPS)
+		V_DrawScaledPatch(cursongcredit.x / FRACUNIT, y-2, V_SNAPTOLEFT|(bgt<<V_ALPHASHIFT), songcreditbg);
+	if (cursongcredit.trans < NUMTRANSMAPS)
+		V_DrawRightAlignedThinString(cursongcredit.x / FRACUNIT, y, V_ALLOWLOWERCASE|V_6WIDTHSPACE|V_SNAPTOLEFT|(cursongcredit.trans<<V_ALPHASHIFT), str);
+}*/
+void ST_drawJukebox(void)
+{
+	if (cv_jukeboxhud.value && jukeboxMusicPlaying)
+	{
+		// Run Variables First //
+		if (initJukeboxHUD)
+		{
+			if (slidetime > 0)
+			{
+				boxw -= 5;
+				strw -= 5;
+				tstrw -= 5;
+			
+				slidetime -= 1;
+			}
+			else
+				initJukeboxHUD = false;
+		}
+
+		// Apply Variables and Render Things //
+		// The Box
+		V_DrawFillConsoleMap(
+			((BASEVIDWIDTH/5)+(boxw-(strlen(jukeboxMusicName) < 18 ? 0 : strlen(va("PLAYING: %s", jukeboxMusicName))+27))), 		// X Width
+			(45),																					  	   							// Y Height
+			(130+(strlen(jukeboxMusicName) < 18 ? 0 : strlen(va("PLAYING: %s", jukeboxMusicName))+27)),					  			// Box Width
+			(25),																					  	  							// Box Height
+			(V_SNAPTORIGHT|V_HUDTRANSHALF));																						// Box Flags
+		
+		// The Strings
+		V_DrawString(
+			(((BASEVIDWIDTH/4)+20)+(strw-(strlen(jukeboxMusicName) < 18 ? 0 : strlen(va("PLAYING: %s", jukeboxMusicName))-14))), 	// String Width
+			(45),																						   	    					// String Height
+			(V_SNAPTORIGHT|V_ALLOWLOWERCASE), 															   	   						// String Flags
+			("JUKEBOX"));																				        					// String
+		
+		V_DrawThinString(
+			(((((BASEVIDWIDTH/5)+1)+tstrw)-(strlen(jukeboxMusicName) < 18 ? 0 : strlen(va("PLAYING: %s", jukeboxMusicName))+27))), 	// String Width
+			(60),																						   	    				   	// String Height
+			(V_SNAPTORIGHT|V_ALLOWLOWERCASE|V_YELLOWMAP), 																			// String Flags and Color
+			(va("PLAYING: %s", jukeboxMusicName)));																					// String
+	}
+
+	if (!cv_jukeboxhud.value || !jukeboxMusicPlaying)
+	{
+		boxw = strw = tstrw = 300;
+		slidetime = (1*TICRATE-2);
+			
+		chosenColor = 0;
+	}
+}
+// END OF STAR SECTION //
+
 // Draw the status bar overlay, customisable: the user chooses which
 // kind of information to overlay
 //
@@ -2080,8 +2188,8 @@ static void ST_overlayDrawer(void)
 		}
 	}
 
-	// STAR stuff lol
-	ST_drawJukebox(); // show us the music we're playing in the jukebox, if we are playing anything
+	// Render Jukebox HUD
+	ST_drawJukebox();
 }
 
 void ST_DrawDemoTitleEntry(void)
@@ -2140,61 +2248,6 @@ void ST_AskToJoinEnvelope(void)
 	// maybe draw number of requests with V_DrawPingNum ?
 }
 #endif
-
-// STAR SECTION //
-//
-// Draws Jukebox Text On The Screen/HUD
-//
-boolean initJukeboxHUD;
-INT32 chosenColor;
-
-INT32 boxw = 300; // Slides our Filed Box to Width 245
-INT32 strw = 300; // Slides our Regular String to Width 230
-INT32 tstrw = 300; // Slides our Thin String to Width 195
-
-void ST_drawJukebox(void)
-{
-	if (cv_jukeboxhud.value)
-	{
-		if (jukeboxMusicPlaying)
-		{
-			if (initJukeboxHUD)
-			{
-				if (chosenColor < 0)
-					chosenColor = M_RandomRange(0, MAXSKINCOLORS);
-
-				if (boxw != 245)
-					boxw -= 5;
-
-				if (strw != 230)
-					strw -= 5;
-
-				if (tstrw != 195)
-					tstrw -= 5;
-
-				if (boxw == 245 && strw == 230 && tstrw == 195)
-					initJukeboxHUD = false;
-			}
-
-			V_DrawFillConsoleMap(boxw, 45, 130, 25, V_HUDTRANSHALF|chosenColor);
-			
-			V_DrawString(strw, 45, V_SNAPTORIGHT|V_ALLOWLOWERCASE, "JUKEBOX");
-			V_DrawThinString(tstrw, 60, V_SNAPTORIGHT|V_ALLOWLOWERCASE|V_YELLOWMAP, va("PLAYING: %s", jukeboxMusicName));
-		}
-		else
-		{
-			boxw = strw = tstrw = 300;
-			chosenColor = -1;
-		}
-	}
-	else
-	{
-		boxw = strw = tstrw = 300;
-		chosenColor = -1;
-	}
-}
-
-// END OF STAR SECTION //
 
 void ST_Drawer(void)
 {

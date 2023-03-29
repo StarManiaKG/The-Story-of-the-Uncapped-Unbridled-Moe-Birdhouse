@@ -275,16 +275,12 @@ INT32 HU_GetHighlightColor(void);
 
 void M_PopupMasterServerRules(void);
 
-#ifdef HAVE_DISCORDRPC
-extern char customSImageString[2+10+17+3]; //Pointer for the name of the custom small image the player is using
-extern char customLImageString[3+17+10+2]; //Pointer for the name of the custom large image the player is using
-#endif
-
 //star stuff weeeeee
+extern consvar_t cv_timeattackpausing;
 extern consvar_t cv_jukeboxhud;
 
 extern boolean jukeboxMusicPlaying;
-extern char jukeboxMusicName[255];
+char jukeboxMusicName[22+12];
 extern char jukeboxMusicTrack[7];
 void M_ResetJukebox(void);
 

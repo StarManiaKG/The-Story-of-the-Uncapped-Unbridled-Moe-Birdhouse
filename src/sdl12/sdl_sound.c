@@ -2001,7 +2001,6 @@ void I_SetDigMusicVolume(UINT8 volume)
 
 boolean I_SetSongSpeed(float speed)
 {
-
 	(void)speed;
 	return false;
 }

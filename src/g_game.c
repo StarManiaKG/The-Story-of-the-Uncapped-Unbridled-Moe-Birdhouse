@@ -798,6 +798,9 @@ void G_SetGameModified(boolean silent, boolean major)
 	if (!major)
 		return;
 
+	if (jukeboxMusicPlaying)
+		S_StopMusic();
+
 	//savemoddata = false; -- there is literally no reason to do this anymore.
 	majormods = true;
 
@@ -1874,8 +1877,6 @@ static INT32 spectatedelay, spectatedelay2, spectatedelay3, spectatedelay4 = 0;
 // G_Responder
 // Get info needed to make ticcmd_ts for the players.
 //
-boolean TSOTUMMBWarning;
-
 boolean G_Responder(event_t *ev)
 {
 	// any other key pops up menu if in demos
@@ -1973,7 +1974,7 @@ boolean G_Responder(event_t *ev)
 		}
 	}
 
-	if (gamestate == GS_LEVEL && ev->type == ev_keydown && multiplayer && demo.playback && !demo.freecam)
+	if ((gamestate == GS_LEVEL && ev->type == ev_keydown && demo.playback && !demo.freecam) && ((!cv_timeattackpausing.value && multiplayer) || (cv_timeattackpausing.value)))
 	{
 		if (ev->data1 == gamecontrolbis[gc_viewpoint][0] || ev->data1 == gamecontrolbis[gc_viewpoint][1])
 		{
@@ -2401,8 +2402,6 @@ void G_ResetViews(void)
 // G_Ticker
 // Make ticcmd_ts for the players.
 //
-boolean TSOTUUMBWarning = false;
-
 void G_Ticker(boolean run)
 {
 	UINT32 i;
@@ -2548,12 +2547,6 @@ void G_Ticker(boolean run)
 		case GS_TITLESCREEN:
 		{
 			F_TitleScreenTicker(run);
-
-			if (!TSOTUUMBWarning)
-			{
-				M_StartMessage(M_GetText("This is a Relatively Stable Build of TSOTUUMB Kart.\nBut for the love of God,\nDo Not Look At The Jukebox."), NULL, MM_NOTHING);
-				TSOTUUMBWarning = true;
-			}
 			break;
 		}
 		case GS_WAITINGPLAYERS:

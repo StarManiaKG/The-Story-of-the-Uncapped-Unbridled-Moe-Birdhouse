@@ -3160,6 +3160,7 @@ static void DEH_LoadDehackedFile(MYFILE *f, UINT16 wad)
 		initfreeslots();
 
 	deh_num_warning = 0;
+
 	// save values for cross reference
 	/*
 	for (i = 0; i < NUMSTATES; i++)

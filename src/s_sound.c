@@ -37,6 +37,7 @@ extern INT32 msg_id;
 #include "r_sky.h" // skyflatnum
 #include "p_local.h" // camera info
 #include "m_misc.h" // for tunes command
+#include "m_menu.h" // Jukeboxes
 
 #ifdef HAVE_BLUA
 #include "lua_hook.h" // MusicChange hook
@@ -55,9 +56,7 @@ static void Command_Tunes_f(void);
 static void Command_RestartAudio_f(void);
 
 // Sound system toggles
-#ifndef NO_MIDI
 static void GameMIDIMusic_OnChange(void);
-#endif
 static void GameSounds_OnChange(void);
 static void GameDigiMusic_OnChange(void);
 
@@ -97,9 +96,7 @@ static consvar_t precachesound = {"precachesound", "Off", CV_SAVE, CV_OnOff, NUL
 // actual general (maximum) sound & music volume, saved into the config
 consvar_t cv_soundvolume = {"soundvolume", "18", CV_SAVE, soundvolume_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
 consvar_t cv_digmusicvolume = {"digmusicvolume", "18", CV_SAVE, soundvolume_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
-#ifndef NO_MIDI
 consvar_t cv_midimusicvolume = {"midimusicvolume", "18", CV_SAVE, soundvolume_cons_t, NULL, 0, NULL, NULL, 0, 0, NULL};
-#endif
 // number of channels available
 #if defined (_WIN32_WCE) || defined (DC) || defined (PSP) || defined(GP2X)
 consvar_t cv_numChannels = {"snd_channels", "8", CV_SAVE|CV_CALL, CV_Unsigned, SetChannelsNum, 0, NULL, NULL, 0, 0, NULL};
@@ -112,9 +109,7 @@ consvar_t surround = {"surround", "Off", CV_SAVE, CV_OnOff, NULL, 0, NULL, NULL,
 
 // Sound system toggles, saved into the config
 consvar_t cv_gamedigimusic = {"digimusic", "On", CV_SAVE|CV_CALL|CV_NOINIT, CV_OnOff, GameDigiMusic_OnChange, 0, NULL, NULL, 0, 0, NULL};
-#ifndef NO_MIDI
 consvar_t cv_gamemidimusic = {"midimusic", "On", CV_SAVE|CV_CALL|CV_NOINIT, CV_OnOff, GameMIDIMusic_OnChange, 0, NULL, NULL, 0, 0, NULL};
-#endif
 consvar_t cv_gamesounds = {"sounds", "On", CV_SAVE|CV_CALL|CV_NOINIT, CV_OnOff, GameSounds_OnChange, 0, NULL, NULL, 0, 0, NULL};
 
 consvar_t cv_playmusicifunfocused = {"playmusicifunfocused",  "No", CV_SAVE|CV_CALL|CV_NOINIT, CV_YesNo, PlayMusicIfUnfocused_OnChange, 0, NULL, NULL, 0, 0, NULL};
@@ -270,9 +265,7 @@ void S_RegisterSoundStuff(void)
 	//CV_RegisterVar(&cv_resetmusic);
 	CV_RegisterVar(&cv_gamesounds);
 	CV_RegisterVar(&cv_gamedigimusic);
-#ifndef NO_MIDI
 	CV_RegisterVar(&cv_gamemidimusic);
-#endif
 
 	CV_RegisterVar(&cv_playmusicifunfocused);
 	CV_RegisterVar(&cv_playsoundifunfocused);
@@ -725,9 +718,7 @@ void S_StopSound(void *origin)
 //
 static INT32 actualsfxvolume; // check for change through console
 static INT32 actualdigmusicvolume;
-#ifndef NO_MIDI
 static INT32 actualmidimusicvolume;
-#endif
 
 void S_UpdateSounds(void)
 {
@@ -744,10 +735,8 @@ void S_UpdateSounds(void)
 		S_SetSfxVolume (cv_soundvolume.value);
 	if (actualdigmusicvolume != cv_digmusicvolume.value)
 		S_SetDigMusicVolume (cv_digmusicvolume.value);
-#ifndef NO_MIDI
 	if (actualmidimusicvolume != cv_midimusicvolume.value)
 		S_SetMIDIMusicVolume (cv_midimusicvolume.value);
-#endif
 
 	// We're done now, if we're not in a level.
 	if (gamestate != GS_LEVEL)
@@ -1302,13 +1291,18 @@ static UINT32    queue_fadeinms;
 musicdef_t soundtestsfx = {
 	"_STSFX", // prevents exactly one valid track name from being used on the sound test
 	"Sound Effects",
+	"SEGA, VAdaPEGA, other sources",
+	0,
+	0,
+	false,
 	NULL
 };
 
 musicdef_t **soundtestdefs = NULL;
-musicdef_t *musicdefstart = NULL; // First music definition
-struct cursongcredit cursongcredit; // Currently displayed song credit info
 INT32 numsoundtestdefs = 0;
+
+musicdef_t *musicdefstart = &soundtestsfx; // First music definition
+struct cursongcredit cursongcredit; // Currently displayed song credit info
 
 //
 // search for music definition in wad
@@ -1440,17 +1434,23 @@ skip_lump:
 			}
 
 			if (!stricmp(stoken, "usage")) {
-#if 0
 				STRBUFCPY(def->usage, value);
 				for (value = def->usage; *value; value++)
 					if (*value == '_') *value = ' '; // turn _ into spaces.
 				//CONS_Printf("S_LoadMusicDefs: Set usage to '%s'\n", def->usage);
-#endif
 			} else if (!stricmp(stoken, "source")) {
 				STRBUFCPY(def->source, value);
 				for (value = def->source; *value; value++)
 					if (*value == '_') *value = ' '; // turn _ into spaces.
 				//CONS_Printf("S_LoadMusicDefs: Set source to '%s'\n", def->source);
+			} else if (!stricmp(stoken, "stoppingtime")) {
+				double stoppingtime = atof(value)*TICRATE;
+				def->stoppingtics = (tic_t)stoppingtime;
+			} else if (!stricmp(stoken, "bpm")) {
+				double bpm = atof(value);
+				fixed_t bpmf = FLOAT_TO_FIXED(bpm);
+				if (bpmf > 0)
+					def->bpm = FixedDiv((60*TICRATE)<<FRACBITS, bpmf);
 			} else {
 				CONS_Alert(CONS_WARNING, "MUSICDEF: Invalid field '%s'. (file %s, line %d)\n", stoken, wadfiles[wadnum]->filename, line);
 			}
@@ -1488,8 +1488,11 @@ boolean S_PrepareSoundTest(void)
 	INT32 pos = numsoundtestdefs = 0;
 
 	for (def = musicdefstart; def; def = def->next)
+	{
+		def->allowed = false;
 		numsoundtestdefs++;
-
+	}
+	
 	if (!numsoundtestdefs)
 		return false;
 
@@ -1500,7 +1503,10 @@ boolean S_PrepareSoundTest(void)
 		I_Error("S_PrepareSoundTest(): could not allocate soundtestdefs.");
 
 	for (def = musicdefstart; def /*&& i < numsoundtestdefs*/; def = def->next)
+	{
 		soundtestdefs[pos++] = def;
+		def->allowed = true;
+	}
 
 	return true;
 }
@@ -1546,7 +1552,7 @@ boolean S_DigMusicDisabled(void)
 
 boolean S_MIDIMusicDisabled(void)
 {
-	return midi_disabled; // SRB2Kart: defined as "true" w/ NO_MIDI
+	return midi_disabled;
 }
 
 boolean S_MusicDisabled(void)
@@ -1656,11 +1662,7 @@ static boolean S_LoadMusic(const char *mname)
 	}
 	else if (S_MIDIMusicDisabled() && S_MIDIExists(mname))
 	{
-#ifdef NO_MIDI
-		CONS_Alert(CONS_ERROR, "A MIDI music lump %.6s was found,\nbut SRB2Kart does not support MIDI output.\nWe apologise for the inconvenience.\n", mname);
-#else
 		CONS_Alert(CONS_NOTICE, "MIDI music is disabled!\n");
-#endif
 		return false;
 	}
 	else
@@ -1762,6 +1764,9 @@ void S_ChangeMusicEx(const char *mmusic, UINT16 mflags, boolean looping, UINT32 
 		|| demo.title) // SRB2Kart: Demos don't interrupt title screen music
 		return;
 
+	if (jukeboxMusicPlaying)
+		return;
+
 	strncpy(newmusic, mmusic, 7);
 #ifdef HAVE_BLUA
 	if(LUAh_MusicChange(music_name, newmusic, &mflags, &looping, &position, &prefadems, &fadeinms))
@@ -1831,6 +1836,9 @@ void S_StopMusic(void)
 		|| demo.title) // SRB2Kart: Demos don't interrupt title screen music
 		return;
 
+	if (jukeboxMusicPlaying)
+		M_ResetJukebox();
+
 	if (I_SongPaused())
 		I_ResumeSong();
 
@@ -1887,41 +1895,31 @@ void S_SetMusicVolume(INT32 digvolume, INT32 seqvolume)
 	if (digvolume < 0)
 		digvolume = cv_digmusicvolume.value;
 
-#ifdef NO_MIDI
-	(void)seqvolume;
-#else
 	if (seqvolume < 0)
 		seqvolume = cv_midimusicvolume.value;
-#endif
 
 	if (digvolume < 0 || digvolume > 31)
 		CONS_Alert(CONS_WARNING, "digmusicvolume should be between 0-31\n");
 	CV_SetValue(&cv_digmusicvolume, digvolume&31);
 	actualdigmusicvolume = cv_digmusicvolume.value;   //check for change of var
 
-#ifndef NO_MIDI
 	if (seqvolume < 0 || seqvolume > 31)
 		CONS_Alert(CONS_WARNING, "midimusicvolume should be between 0-31\n");
 	CV_SetValue(&cv_midimusicvolume, seqvolume&31);
 	actualmidimusicvolume = cv_midimusicvolume.value;   //check for change of var
-#endif
 
 #ifdef DJGPPDOS
 	digvolume = 31;
-#ifndef NO_MIDI
 	seqvolume = 31;
-#endif
 #endif
 
 	switch(I_SongType())
 	{
-#ifndef NO_MIDI
 		case MU_MID:
 		//case MU_MOD:
 		//case MU_GME:
 			I_SetMusicVolume(seqvolume&31);
 			break;
-#endif
 		default:
 			I_SetMusicVolume(digvolume&31);
 			break;
@@ -1944,6 +1942,9 @@ void S_StopFadingMusic(void)
 
 boolean S_FadeMusicFromVolume(UINT8 target_volume, INT16 source_volume, UINT32 ms)
 {
+	if (jukeboxMusicPlaying)
+		return false;
+
 	if (source_volume < 0)
 		return I_FadeSong(target_volume, ms, NULL);
 	else
@@ -1952,6 +1953,9 @@ boolean S_FadeMusicFromVolume(UINT8 target_volume, INT16 source_volume, UINT32 m
 
 boolean S_FadeOutStopMusic(UINT32 ms)
 {
+	if (jukeboxMusicPlaying)
+		return false;
+
 	return I_FadeSong(0, ms, &S_StopMusic);
 }
 
@@ -1966,6 +1970,9 @@ boolean S_FadeOutStopMusic(UINT32 ms)
 //
 void S_Start(void)
 {
+	if (jukeboxMusicPlaying)
+		return; // torture is my favorite form of punishment how did you know
+
 	if (mapmusflags & MUSIC_RELOADRESET)
 	{
 		strncpy(mapmusname, mapheaderinfo[gamemap-1]->musname, 7);
@@ -2062,6 +2069,7 @@ static void Command_RestartAudio_f(void)
 	if (dedicated)  // No point in doing anything if game is a dedicated server.
 		return;
 
+	// star note: since this is a command i will grant you the ability to restart jukebox audio and stop it from playing here
 	S_StopMusic();
 	S_StopSounds();
 	I_ShutdownMusic();
@@ -2072,11 +2080,7 @@ static void Command_RestartAudio_f(void)
 // These must be called or no sound and music until manually set.
 
 	I_SetSfxVolume(cv_soundvolume.value);
-#ifdef NO_MIDI
-	S_SetMusicVolume(cv_digmusicvolume.value, -1);
-#else
 	S_SetMusicVolume(cv_digmusicvolume.value, cv_midimusicvolume.value);
-#endif
 
 	S_StartSound(NULL, sfx_strpst);
 
@@ -2084,6 +2088,8 @@ static void Command_RestartAudio_f(void)
 		P_RestoreMusic(&players[consoleplayer]);
 	else
 		S_ChangeMusicInternal("titles", looptitle);
+	if (jukeboxMusicPlaying) //Fine, I'll let you do it here...
+		M_ResetJukebox();
 }
 
 void GameSounds_OnChange(void)
@@ -2142,7 +2148,6 @@ void GameDigiMusic_OnChange(void)
 	}
 }
 
-#ifndef NO_MIDI
 void GameMIDIMusic_OnChange(void)
 {
 	if (M_CheckParm("-nomusic") || M_CheckParm("-noaudio"))
@@ -2183,7 +2188,6 @@ void GameMIDIMusic_OnChange(void)
 		}
 	}
 }
-#endif
 
 static void PlayMusicIfUnfocused_OnChange(void)
 {

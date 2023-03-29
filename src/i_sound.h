@@ -28,9 +28,9 @@ typedef enum {
 	MU_OGG,
 	MU_MP3,
 	MU_MP3_MAD_UNUSED, // use MU_MP3 instead
-	MU_FLAC,
-	MU_MODPLUG_UNUSED, // use MU_MOD instead
-	MU_GME
+	MU_FLAC, MU_MOD_EX,
+	MU_MODPLUG_UNUSED, MU_MID_EX, // for MU_MODPLUG_UNUSED, use MU_MOD instead
+	MU_GME,
 } musictype_t;
 
 /**	\brief Sound subsystem runing and waiting

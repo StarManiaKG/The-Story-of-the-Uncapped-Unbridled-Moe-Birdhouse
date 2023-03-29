@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2018 by Sonic Team Junior.
+// Copyright (C) 1999-2022 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -24,17 +24,21 @@
 #define PICKUP_SOUND 0x8000
 
 extern consvar_t stereoreverse;
-extern consvar_t cv_soundvolume, cv_digmusicvolume;//, cv_midimusicvolume;
+extern consvar_t cv_soundvolume, cv_digmusicvolume, cv_midimusicvolume;
 extern consvar_t cv_numChannels;
 extern consvar_t surround;
 //extern consvar_t cv_resetmusic;
 extern consvar_t cv_gamedigimusic;
-#ifndef NO_MIDI
 extern consvar_t cv_gamemidimusic;
-#endif
 extern consvar_t cv_gamesounds;
 extern consvar_t cv_playmusicifunfocused;
 extern consvar_t cv_playsoundifunfocused;
+
+#ifdef HAVE_MIXERX
+extern consvar_t cv_midiplayer;
+extern consvar_t cv_midisoundfontpath;
+extern consvar_t cv_miditimiditypath;
+#endif
 
 #ifdef SNDSERV
 extern consvar_t sndserver_cmd, sndserver_arg;
@@ -134,9 +138,11 @@ boolean S_SpeedMusic(float speed);
 typedef struct musicdef_s
 {
 	char name[7];
-	//char usage[256];
+	char usage[256];
 	char source[256];
-
+	tic_t stoppingtics;
+	fixed_t bpm;
+	boolean allowed; // question marks or listenable on sound test?
 	struct musicdef_s *next;
 } musicdef_t;
 

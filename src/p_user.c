@@ -29,6 +29,7 @@
 #include "p_setup.h"
 #include "m_random.h"
 #include "m_misc.h"
+#include "m_menu.h" // Jukeboxing
 #include "i_video.h"
 #include "i_joy.h"
 #include "p_slopes.h"
@@ -1020,7 +1021,8 @@ void P_DoSuperTransformation(player_t *player, boolean giverings)
 	player->powers[pw_super] = 1;
 	if (!(mapheaderinfo[gamemap-1]->levelflags & LF_NOSSMUSIC) && P_IsLocalPlayer(player))
 	{
-		S_StopMusic();
+		if (!jukeboxMusicPlaying)
+			S_StopMusic();
 		S_ChangeMusicInternal("supers", true);
 	}
 
@@ -1109,7 +1111,8 @@ void P_PlayLivesJingle(player_t *player)
 	{
 		if (player)
 			player->powers[pw_extralife] = extralifetics + 1;
-		S_StopMusic(); // otherwise it won't restart if this is done twice in a row
+		if (!jukeboxMusicPlaying)
+			S_StopMusic(); // otherwise it won't restart if this is done twice in a row
 		S_ChangeMusicInternal("xtlife", false);
 	}
 }
@@ -1283,13 +1286,18 @@ void P_RestoreMusic(player_t *player)
 		else
 		{
 #if 0
-			// Event - Final Lap
-			// Still works for GME, but disabled for consistency
+			OLD VERSION: Event - Final Lap
+			Kept for History Reasons
 			if (G_RaceGametype() && player->laps >= (UINT8)(cv_numlaps.value - 1))
 				S_SpeedMusic(1.2f);
-#endif
-			S_ChangeMusicEx(mapmusname, mapmusflags, true, mapmusposition, 0, 0);
+#else
+			// NEW VERSION: Event - Final Lap
+			if (G_RaceGametype() && (player->laps == (UINT8)(cv_numlaps.value - 1)))
+				S_SpeedMusic(1.2f);
+			else
+				S_ChangeMusicEx(mapmusname, mapmusflags, true, mapmusposition, 0, 0);
 		}
+#endif
 	}
 }
 
@@ -2273,7 +2281,8 @@ static void P_CheckUnderwaterAndSpaceTimer(player_t *player)
 		if (player->powers[pw_underwater] == 11*TICRATE + 1
 		&& player == &players[consoleplayer])
 		{
-			S_StopMusic();
+			if (!jukeboxMusicPlaying)
+				S_StopMusic();
 			S_ChangeMusicInternal("drown", false);
 		}
 

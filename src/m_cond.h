@@ -96,7 +96,6 @@ typedef struct
 	UINT8 sprite;        ///< emblem sprite to use, 0 - 25
 	UINT8 color;         ///< skincolor to use
 	UINT8 collected;     ///< Do you have this emblem?
-	char hint[110];  	 ///< Hint for emblem hints menu, but for extraemblems :)
 } extraemblem_t;
 
 // Unlockable information
@@ -104,7 +103,6 @@ typedef struct
 {
 	char name[64];
 	char objective[64];
-	UINT16 height; // menu height
 	UINT8 showconditionset;
 	UINT8 conditionset;
 	INT16 type;

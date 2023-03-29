@@ -4302,7 +4302,10 @@ DoneSection2:
 					if (P_IsLocalPlayer(player))
 					{
 						if (player->laps == (UINT8)(cv_numlaps.value - 1))
+						{
 							S_StartSound(NULL, sfx_s3k68);
+							S_SpeedMusic(1.2f); 			// Speed Up Music - For Final Lap (Based on the Very Creative Command With the Same Name)
+						}
 						else if (player->laps < (UINT8)(cv_numlaps.value - 1))
 							S_StartSound(NULL, sfx_s221);
 					}

@@ -478,6 +478,20 @@ consvar_t cv_mute = {"mute", "Off", CV_NETVAR|CV_CALL, CV_OnOff, Mute_OnChange, 
 
 consvar_t cv_sleep = {"cpusleep", "1", CV_SAVE, sleeping_cons_t, NULL, -1, NULL, NULL, 0, 0, NULL};
 
+static CV_PossibleValue_t skinselectmenu_t[] = {{SKINMENUTYPE_SCROLL, "Scoll"}, {SKINMENUTYPE_2D, "2d"}, {SKINMENUTYPE_GRID, "Grid"}, {0, NULL}};
+consvar_t cv_skinselectmenu = {"skinselectmenu", "Grid", CV_SAVE, skinselectmenu_t, NULL, 0, NULL, NULL, 0, 0, NULL};
+
+static CV_PossibleValue_t skinselectgridsort_t[] ={
+	{ SKINMENUSORT_REALNAME, "Real name" },
+	{ SKINMENUSORT_NAME, "Internal name" },
+	{ SKINMENUSORT_SPEED, "Speed" },
+	{ SKINMENUSORT_WEIGHT, "Weight" },
+	{ SKINMENUSORT_PREFCOLOR, "Preferred Color" }, // get stickbugged lol
+	{ SKINMENUSORT_ID, "ID" },
+	{ 0, NULL }
+};
+consvar_t cv_skinselectgridsort = { "skinselectgridsort", "Real name", CV_SAVE|CV_CALL|CV_NOINIT, skinselectgridsort_t, sortSkinGrid, 0, NULL, NULL, 0, 0, NULL };
+
 INT16 gametype = GT_RACE; // SRB2kart
 boolean forceresetplayers = false;
 boolean deferencoremode = false;
@@ -832,6 +846,9 @@ void D_RegisterClientCommands(void)
 	// preferred number of players
 	CV_RegisterVar(&cv_splitplayers);
 
+	CV_RegisterVar(&cv_skinselectmenu);
+	CV_RegisterVar(&cv_skinselectgridsort);
+
 #ifdef SEENAMES
 	CV_RegisterVar(&cv_seenames);
 #endif
@@ -978,9 +995,7 @@ void D_RegisterClientCommands(void)
 	// s_sound.c
 	CV_RegisterVar(&cv_soundvolume);
 	CV_RegisterVar(&cv_digmusicvolume);
-#ifndef NO_MIDI
 	CV_RegisterVar(&cv_midimusicvolume);
-#endif
 	CV_RegisterVar(&cv_numChannels);
 
 	// i_cdmus.c
@@ -1059,6 +1074,8 @@ void D_RegisterClientCommands(void)
 #endif
 
 	// star stuff yay
+	CV_RegisterVar(&cv_timeattackpausing);
+	
 	CV_RegisterVar(&cv_jukeboxhud);
 }
 
@@ -2888,12 +2905,11 @@ static void Command_Pause(void)
 			CONS_Printf(M_GetText("You can't pause here.\n"));
 			return;
 		}
-		else if (modeattacking)	// in time attack, pausing restarts the map
+		else if (modeattacking && !cv_timeattackpausing.value)	// in time attack, pausing restarts the map, if you don't have the timeattackpausing commnad on
 		{
 			M_ModeAttackRetry(0);	// directly call from m_menu;
 			return;
 		}
-
 		SendNetXCmd(XD_PAUSE, &buf, 2);
 	}
 	else
@@ -2919,7 +2935,7 @@ static void Got_Pause(UINT8 **cp, INT32 playernum)
 		return;
 	}
 
-	if (modeattacking && !demo.playback)
+	if (modeattacking && !demo.playback && !cv_timeattackpausing.value)
 		return;
 
 	paused = READUINT8(*cp);
