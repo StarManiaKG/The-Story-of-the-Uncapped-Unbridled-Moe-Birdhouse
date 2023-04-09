@@ -1048,10 +1048,10 @@ static void IdentifyVersion(void)
 
 	// Do Extra Star Stuff //
 	// Extra Wads
-	char *musicdta = malloc(strlen(srb2waddir)+1+9+1);
+	char *musicdta = malloc(strlen(srb2waddir)+1+10+1);
 	if (musicdta)
 	{
-		sprintf(musicdta, pandf, srb2waddir, "music.dta");
+		sprintf(musicdta, pandf, srb2waddir, "music.kart");
 		if (FIL_ReadFileOK(musicdta))
 		{
 			extrawads += 1;
@@ -1059,10 +1059,10 @@ static void IdentifyVersion(void)
 		}
 	}
 
-	char *jukeboxpk3 = malloc(strlen(srb2waddir)+1+11+1);
+	char *jukeboxpk3 = malloc(strlen(srb2waddir)+1+12+1);
 	if (jukeboxpk3)
 	{
-		sprintf(jukeboxpk3, pandf, srb2waddir, "jukebox.pk3");
+		sprintf(jukeboxpk3, pandf, srb2waddir, "jukebox.kart");
 		if (FIL_ReadFileOK(jukeboxpk3))
 		{
 			extrawads += 1;

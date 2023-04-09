@@ -12990,14 +12990,15 @@ static void M_DrawTsotuumbJukebox(void)
 				M_ResetJukebox();
 				st_time = 0;
 			}
-			/*else
+			else
 			{
 				fixed_t work, bpm = soundtestdefs[st_sel]->bpm;
 				angle_t ang;
 				//bpm = FixedDiv((60*TICRATE)<<FRACBITS, bpm); -- bake this in on load
 
-				work = st_time;
-				work %= bpm;
+				/*
+				//work = st_time;
+				//work %= bpm;
 
 				if (st_time >= (FRACUNIT << (FRACBITS - 2))) // prevent overflow jump - takes about 15 minutes of loop on the same song to reach
 					st_time = work;
@@ -13012,7 +13013,8 @@ static void M_DrawTsotuumbJukebox(void)
 				vscale += bounce/16;
 
 				st_time += renderdeltatics;
-			}*/
+				*/
+			}
 		}
 	}
 
@@ -13021,7 +13023,7 @@ static void M_DrawTsotuumbJukebox(void)
 
 	V_DrawFixedPatch(x, y,
 		hscale, vscale,
-		st_radio[frame[0]], NULL);
+		st_radio[frame[0]], NULL); //st_radio[0], NULL);
 
 	V_DrawFixedPatch(x, y, FRACUNIT/2, 0, st_launchpad[0], NULL);
 
@@ -13143,7 +13145,7 @@ static void M_DrawTsotuumbJukebox(void)
 				}
 
 				//if (curplaying == soundtestdefs[t])
-				if (curplaying)
+				if (soundtestdefs[st_sel])
 				{
 					sfxstr = (cv_soundtest.value) ? S_sfx[cv_soundtest.value].name : "N/A";
 					i = V_StringWidth(sfxstr, 0);
@@ -13161,8 +13163,8 @@ static void M_DrawTsotuumbJukebox(void)
 					// Thin Strings
 					V_DrawThinString(x, y, (t == st_sel ? V_YELLOWMAP : 0)|V_ALLOWLOWERCASE, soundtestdefs[t]->usage));
 
-				//if (curplaying == soundtestdefs[t])
-				if (curplaying)
+				//if (soundtestdefs[st_sel] == soundtestdefs[t])
+				if (soundtestdefs[st_sel])
 				{
 					V_DrawFill(165+140-9+24, y-4, 8, 16, 150);
 					

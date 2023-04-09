@@ -1174,7 +1174,9 @@ void DRPC_UpdatePresence(void)
 				}
 			}
 		}
-		else if (gamestate == GS_VOTING) // Voting Info
+
+		// Other Info //
+		else if (gamestate == GS_VOTING)
 		{
 			discordPresence.largeImageKey = (G_BattleGametype() ? "miscredplanet" : "miscblueplanet");
 			discordPresence.largeImageText = "Voting";
